@@ -54,7 +54,12 @@ function[phi, im] = acwe(im, varargin)
   ep2 = eps*eps;
   
 %% Load initial data
-  [u0, r] = init_im( im );   
+  if isa( im, 'char' ) == 1
+    [u0, r] = init_im( im );   
+  else
+    u0 = im2double(im);
+    r = 1;
+  end
   [M, N] = size(u0);
   u0 = u0/max(abs(u0(:)))*255;
  
@@ -144,7 +149,7 @@ end
 %% Plot final results
   plotseg(u0, phi, fignum, mu, C1, C2, Iter);
 end
-% End of main function
+% % End of main function % %
 
 function[] = plotseg(u0, phi, fignum, mu, C1, C2, Iter)
 %% Visualize intermediate and final results 
