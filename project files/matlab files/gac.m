@@ -1,131 +1,76 @@
-function[phi, im] = gac(im, dt, c, iter_max, fignum, phi_type, noisy)
-%% Matlab code modified from 
+function[phi, im] = gac(im, varargin)
+%% gac(im, dt, c, noisy, iter_max, fignum, phi_type)
+% Inputs:
+%   im: select synthetic image (see options below) for segmentation
+%   dt: timestep size
+%   c: constant velocity in the normal dir; c>0 (expand), c<0 (contract)
+%   noisy: 1 or 0
+%   iter_max: max # of iterations
+%   fignum: figure# for plotting
+%   phi_type: level set function initialization
+% Output:
+%   phi: levet set function
+%   im: initial image
+%
+% Matlab code modified from 
 %     http://www.math.ucla.edu/~lvese/285j.1.05s/TV_L2.m
 %
-% Image segmentation by geodesic active contours (GAC) model as described
-% in [1] via a semi-implicit discretization similar to [2]. The energy to 
-% be minimized is 
+% Image segmentation by geodesic active contours (GAC) model from [1] via 
+% a semi-implicit discretization similar to [2]. The energy to be 
+% minimized is 
 %     integrate g( grad(I) ) ds
 % and its Euler-Lagrange equation 
 %     u_t = agrad(u) * div( g*grad(u)/agrad(u) ) + c*g*agrad(u)
 %         = g*(c + kappa)*agrad(u) + <grad(u), grad(g)>,
 % where agrad(u) = abs(grad(u)). Upwinding is applied to the 2nd term [3].
 %
-% Inputs:
-%   im: select synthetic image (see options below) for segmentation
-%   c: constant velocity in the normal dir; c>0 (expand), c<0 (contract)
-%   iter_max: max # of iterations
-%   fignum: figure# for plotting
-%   phi_type: level set function initialization
-%   dt: time stepsize
-%   noisy: 1 or 0
-% 
-% Output:
-%   phi: level set function
-%
 % Eg:
-% >> gac('sqr4', 0.05, -9, 300);
+% >> gac('sqr4', 0.05, -9, 0, 300, 70, 'sqr4');
 %
 % References:
 % [1] CassellKimmelSapiro, Geodesic active contours (1997)
 % [2] ChanVese, Active contours without edges (2001)
 % [3] MarquinaOsher, Explicit algorithms for a new time-dependent...(2000)
 %
-% LAST MODIFIED: 25Mar2020
+% LAST MODIFIED: 29Mar2020
 %
- 
 
-%% Read inputs
+%% Read inputs (im, dt, c, noisy, iter_max, fignum, phi_type)
   if nargin < 1
-    error('Missing inputs');
-  elseif nargin < 7
-    noisy = 0;
-    if nargin < 6
-      phi_type = im;
-      if nargin < 5
-        fignum = 96;
-        if nargin < 4
-          iter_max = 100;
-          if nargin < 3
-            c = 0;
-            if nargin < 2
-              dt = 0.05;
-            end
-          end
-        end
-      end
-    end
+    error('Missing all inputs');
   end
-      
+  numvarargs = length(varargin);
+  if numvarargs > 6
+    error('Too many inputs...');
+  end
+  % dt, c, noisy, iter_max, fignum, phi_type
+  optargs = {0.05, 0, 0, 100, 80, im};
+  optargs(1:numvarargs) = varargin;
+  [dt, c, noisy, iter_max, fignum, phi_type] = optargs{:};
+    
+%% Set parameters
+% Space & time discretization 
+  h = 1.0;
 
+% Regularize TV at the origin 
+  ep = 1e-6;
+  ep2 = ep*ep;
+  
+% Stopping tol
+  tol = 1e-3;
+  n2 = -1;
+  
 %% Load initial data
-%   u0 = load('noisybrain.mat'); u0 = 255*im2double(u0.Kn);
-
-% Create simple synthetic images for testing
-  u0 = zeros(256,256);
-  switch im
-    case 'sqr1' % centred square
-      u0(100:150,100:150) = 255; 
-      r = 45;
-      
-    case 'sqr2' % offset squares
-      u0(50:100,50:100) = 255; 
-      u0(150:170,150:170) = 255;
-      
-    case 'sqr3' % L-shape
-      u0(78:178,78:128) = 255;
-      u0(129:178,129:179) = 255; 
-      r = 75;
-      
-    case 'sqr4' % L-shape + small block
-      u0(78:178, 78:128) = 255;
-      u0(129:178, 129:179) = 255; 
-      u0(78:118, 139:179) = 255;
-      r = 85;
-      
-    case 'blur1' % gaussian bump; blurred circle
-      xx = 1:256;
-      [XX, YY] = meshgrid(xx, xx);
-      D = sqrt((XX-128).^2 + (YY-128).^2);
-      u0( D < 25 ) = 256;
-      u0 = imgaussfilt( u0, 15 ); 
-      r = 125;
-      
-    case 'blur2' % gaussian bump; blurred circle
-      xx = 1:256;
-      [XX, YY] = meshgrid(xx, xx);
-      D = sqrt((XX-128).^2 + (YY-128).^2);
-      u0( D < 25 ) = 255;
-      u0 = imgaussfilt( u0, 40 ); 
-      r = 125;
-      
-    case 'sidebar'
-      u0(96:160, 112:128) = 255;
-      for i = 129:192
-        u0(96:160, i) = -1/16*(i-128).^2 + 255;
-      end
-      u0 = circshift(u0, [0,-111]);
-      r = 111;
-      
-    case 'bar2'
-      u0(96:160, 64:128) = 255;
-      epsl = 1e-1;
-      p = 2;
-      a = (epsl - 4^4)/(4^(3/p));
-      for i = 129:192
-        u0(96:160, i) = a*(i-128)^(1/p) + 255;
-      end
-      r = 75;
-      
-  end
-      
+% Read simple synthetic images for testing
+  [u0, r] = init_im( im );
   [M, N] = size(u0);
   
-  % Add noise
+  % Add noise % Does this work...? Terribly..
   if noisy == 1
-    u0 = u0 + 10*randn(size(u0));
-    for i = 1:3
-      u0 = imgaussfilt(u0,3);
+    sigma = max(abs(u0(:)))/100;
+    u0 = u0 + sigma*randn(size(u0));
+    for i = 1:1
+      u0 = imgaussfilt(u0,sigma);
     end
   end
 
@@ -134,36 +79,18 @@ function[phi, im] = gac(im, dt, c, iter_max, fignum, phi_type, noisy)
   imagesc(u0); axis('image', 'off')
   title('\bf (Noisy) image - original', 'fontsize', 20);
   
-  
-%% Set parameters
-% Space & time discretization 
-  h = 1.0;
-%   dt = 0.001;
-
-% Regularize TV at the origin 
-  ep = 1e-6;
-  ep2 = ep*ep;
-  
-% Stopping tol
-  tol = 1e-3;
-  n1 = -1; n2 = -1;
-  
-  
 %% Setup edge detector
-%   g = imfilter( u0, fspecial('average', 3), 'replicate' ); % smoothed image
   g = imgaussfilt( u0 );   % gaussian-smoothed image
   g = 1./(1 + imgradient( g ).^2);  % classic edge detector, p=2
-  
   
 %% Initialize level set function
   x = linspace(1, N, N); 
   y = linspace(1, M, M);
   [X, Y] = meshgrid(x, y);
   
-  % Option 1: one circle 
+% Default option: large circle centred
   switch phi_type
-    case {'sqr1', 'sqr3', 'sqr4', 'blur1', 'blur2', 'bar2' }
-%       r = 75; %min(M,N)/4;
+    case {'sqr1', 'sqr3', 'sqr4', 'blur', 'blur2', 'bar', 'default' }
       phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + r;
       
     case 'sqr2'
@@ -178,10 +105,7 @@ function[phi, im] = gac(im, dt, c, iter_max, fignum, phi_type, noisy)
     
   
 %% %%%%%%%%%%    Begin iterations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for Iter=1:iter_max
-  
-%   fprintf('Iter = %3d, C1 = %8.9g, C2 = %3.8g\n', Iter);
-  
+for Iter=1:iter_max  
 % Update pointwise (Gauss-Seidel type scheme)  
   for i = 2:M-1
     for j = 2:N-1
@@ -213,6 +137,7 @@ for Iter=1:iter_max
     	div = co1*phi(i+1,j) + co2*phi(i-1,j) + co3*phi(i,j+1) ...
         + co4*phi(i,j-1);
       
+      % Upwinding on second term
       gx = -c*(phi(i+1,j) - phi(i-1,j));
       gy = -c*(phi(i,j+1) - phi(i,j-1));
       if gx > 0
@@ -245,18 +170,16 @@ for Iter=1:iter_max
   end
 
 % Mid-cycle plot updates
-  if mod(Iter, iter_max/10) == 1    % change 500 to small# for more updates
+  if mod(Iter, 20) == 1    % change 500 to small# for more updates
     plotseg(u0, phi, fignum, c, Iter, phi_type);
-    pause(0.05)
   end
   
 end 
 % %%%%%%%%%%     End iterations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 %% Plot final results
   plotseg(u0, phi, fignum, c, Iter, phi_type);
-  fprintf('\n');
+%   fprintf('\n');
 end
 % End of main function
 
@@ -284,22 +207,3 @@ function[] = plotseg(u0, phi, fignum, c, Iter, phi_type)
   
 end
 
-function[phi] = BCs(phi, M, N)
-%% Sets homogeneous neumann BCs
-%
-  for i = 2:M-1
-    phi(i,1) = phi(i,2);
-    phi(i,N) = phi(i,N-1);
-  end
-
-	for j = 2:N-1
-    phi(1,j) = phi(2,j);
-    phi(M,j) = phi(M-1,j);
-  end
-
-  phi(1,1) = phi(2,2);
-  phi(1,N) = phi(2,N-1); 
-  phi(M,1) = phi(M-1,2);
-  phi(M,N) = phi(M-1,N-1);
-  
-end
