@@ -59,7 +59,7 @@ function[u0, r] = init_im( im )
     otherwise
       fprintf('\nDefault u0 -- possibly undefined behaviour.\n');
       u0 = im2double(imread('cameraman.tif'));
-      r = min(size(u0))/2;
+      r = 5;
       
   end
 end
