@@ -73,11 +73,6 @@ function[phi, im] = gac(im, varargin)
       u0 = imgaussfilt(u0,sigma);
     end
   end
-
-% Show initial image
-  figure(fignum); clf; subplot(3,3,1)
-  imagesc(u0); axis('image', 'off')
-  title('\bf (Noisy) image - original', 'fontsize', 20);
   
 %% Setup edge detector
   g = imgaussfilt( u0 );   % gaussian-smoothed image
@@ -90,7 +85,7 @@ function[phi, im] = gac(im, varargin)
   
 % Default option: large circle centred
   switch phi_type
-    case {'sqr1', 'sqr3', 'sqr4', 'blur', 'blur2', 'bar', 'default' }
+    case {'sqr1', 'sqr3', 'sqr4', 'blur', 'blur2', 'bar' }
       phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + r;
       
     case 'sqr2'
@@ -99,13 +94,20 @@ function[phi, im] = gac(im, varargin)
       
     case 'sidebar'
       phi = -sqrt( (X-(0)/2).^2 + (Y-(M+1)/2).^2 ) + r;
+      
+    case 'default'
+      phi = -sqrt( (X-(N+1)/4).^2 + (Y-(M+1)/2).^2 ) + r;
+      c = 9;
   end
   
-%   phi = phi/max(abs(phi(:)));
-    
+% Show image with initial contour
+  figure(fignum); clf; subplot(3,3,1)
+  imagesc(u0); axis('image', 'off'); hold on
+  contour(phi, [0 0], 'r', 'linewidth', 2.0);
+  title('\bf Original image + contour', 'fontsize', 20);
   
 %% %%%%%%%%%%    Begin iterations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for Iter=1:iter_max  
+for iter=1:iter_max  
 % Update pointwise (Gauss-Seidel type scheme)  
   for i = 2:M-1
     for j = 2:N-1
@@ -163,43 +165,37 @@ for Iter=1:iter_max
  
 % Stopping criteria
   n1 = nnz(phi<0);
-  if Iter > 10 && abs(n1 - n2) < 2
+  if iter > 10 && abs(n1 - n2) < 2
     break;
   else
     n2 = n1;
   end
 
 % Mid-cycle plot updates
-  if mod(Iter, 20) == 1    % change 500 to small# for more updates
-    plotseg(u0, phi, fignum, c, Iter, phi_type);
+  if mod(iter, 20) == 1    % change 500 to small# for more updates
+    plotseg(u0, phi, fignum, c, iter);
   end
   
 end 
 % %%%%%%%%%%     End iterations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Plot final results
-  plotseg(u0, phi, fignum, c, Iter, phi_type);
+  plotseg(u0, phi, fignum, c, iter);
 %   fprintf('\n');
 end
 % End of main function
 
-function[] = plotseg(u0, phi, fignum, c, Iter, phi_type)
+function[] = plotseg(u0, phi, fignum, c, iter)
 %% Visualize final results 
 %
   figure(fignum); subplot(3,3,[2 3 5 6 8 9]);
   imagesc(u0);  axis('image', 'off'); colormap(gray); 
   hold on 
-  contour(phi, [0,0], 'linewidth', 1.5, 'linecolor', 'r');
+  contour(phi, [0,0], 'linewidth', 2.0, 'linecolor', 'r');
   hold off;
   
-  title({['\bf GAC -- ', phi_type], ... 
-    ['c = ', num2str(c), ' , Iter = ', num2str(Iter)]}, ...
+  title({'\bf GAC', ['c = ', num2str(c), ' , Iter = ', num2str(iter)]}, ...
     'fontsize', 20)
-  
-  subplot(3,3,[4 7])
-  contourf(flipud(phi), [0 0], 'linewidth', 1.5);
-  axis('image', 'off'); colormap(gray);
-  title('\bf Level set function' ,'fontsize', 20)
   
   h = gca; 
   h.FontSize = 18;
