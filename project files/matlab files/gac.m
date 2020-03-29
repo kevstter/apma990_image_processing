@@ -25,7 +25,8 @@ function[phi, im] = gac(im, varargin)
 % where agrad(u) = abs(grad(u)). Upwinding is applied to the 2nd term [3].
 %
 % Eg:
-% >> gac('sqr4', 0.05, -9, 0, 300, 70, 'sqr4');
+% >> ims = {'sqr1','sqr2','sqr3','sqr4','bar','sidebar','blur','blur2'};
+% >> for k=1:length(ims), gac(ims{k},0.05,-9,0,100,70+k); pause(0.5); end
 %
 % References:
 % [1] CassellKimmelSapiro, Geodesic active contours (1997)
@@ -79,32 +80,10 @@ function[phi, im] = gac(im, varargin)
   g = 1./(1 + imgradient( g ).^2);  % classic edge detector, p=2
   
 %% Initialize level set function
-  x = linspace(1, N, N); 
-  y = linspace(1, M, M);
-  [X, Y] = meshgrid(x, y);
+  phi = init_ls( N, M, r , phi_type );
   
-% Default option: large circle centred
-  switch phi_type
-    case {'sqr1', 'sqr3', 'sqr4', 'blur', 'blur2', 'bar' }
-      phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + r;
-      
-    case 'sqr2'
-      phi = -sqrt( (X-75).^2 + (Y-75).^2 ) + 40;
-      phi = max(phi, -sqrt( (X-160).^2 + (Y-160).^2 ) + 20);
-      
-    case 'sidebar'
-      phi = -sqrt( (X-(0)/2).^2 + (Y-(M+1)/2).^2 ) + r;
-      
-    case 'default'
-      phi = -sqrt( (X-(N+1)/4).^2 + (Y-(M+1)/2).^2 ) + r;
-      c = 9;
-  end
-  
-% Show image with initial contour
-  figure(fignum); clf; subplot(3,3,1)
-  imagesc(u0); axis('image', 'off'); hold on
-  contour(phi, [0 0], 'r', 'linewidth', 2.0);
-  title('\bf Original image + contour', 'fontsize', 20);
+%% Show initial state
+  init_plot(fignum, u0, phi);
   
 %% %%%%%%%%%%    Begin iterations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for iter=1:iter_max  
@@ -186,7 +165,7 @@ end
 % End of main function
 
 function[] = plotseg(u0, phi, fignum, c, iter)
-%% Visualize final results 
+%% Visualize intermediate and final results 
 %
   figure(fignum); subplot(3,3,[2 3 5 6 8 9]);
   imagesc(u0);  axis('image', 'off'); colormap(gray); 
@@ -203,3 +182,14 @@ function[] = plotseg(u0, phi, fignum, c, iter)
   
 end
 
+function[] = init_plot(fignum, u0, phi)
+% Plots image and initial contour
+  figure(fignum); clf;
+  subplot(3,3,1)
+  imagesc(u0); axis('image', 'off');
+  title('\bf Original image', 'fontsize', 20);
+  subplot(3,3,[4 7])
+  imagesc(u0); axis('image', 'off'); hold on
+  contour(phi, [0 0], 'r', 'linewidth', 2.0); hold off
+  title('\bf Image + initial contour', 'fontsize', 20);
+end
