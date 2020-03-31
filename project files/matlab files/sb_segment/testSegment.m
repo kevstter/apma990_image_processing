@@ -15,19 +15,20 @@
 
 %% Basic testing
 % Series of synthetic images avail for testing
-im = {'orig','sqr','sqr2','sqr3','blur','blur2','sidebar','bar'};
+im = {'orig','sqr2','sqr3','blur','blur2','sidebar','bar'};
 
 % close all; clear;
 for k=1:1%length(im)
-  u0 = get_im(im{k});
+%   u0 = get_im(im{k});
+  u0 = 255*im2double(imread('cameraman.tif'));
 
 % Add noise
   u0 = u0+10*randn(256,256);
 
 %  Edge detector
-  edge = ones(256,256);     % do nothing edge detector
-%   edge = imgaussfilt( image );  % Smooth out image
-%   edge = 1./(1 + imgradient( edge ).^2); % classic edge detector, p=2
+%   edge = ones(256,256);     % do nothing edge detector
+  edge = imgaussfilt( image );  % Smooth out image
+  edge = 1./(1 + imgradient( edge ).^2); % classic edge detector, p=2
 
 % Segment with 3 different parameters
   m1 = 1e-2; m2 = 1e-5; m3 = 2e-6;
