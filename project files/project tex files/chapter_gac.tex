@@ -16,12 +16,57 @@ This energy $E_\textrm{GAC}$ may be interpreted as a weighted arc length. If $g(
 
 Before we move on, it is important to note that when we speak of minimizing $\egac$, we are seeking local minima, as $\egac$ does have the unfortunate feature that it attains a global minimum of zero when the contour contracts to a point and vanishes. We will have more on this when reviewing the results of numerical experiments.
 
-The next sections will be devoted to investigating the practical performance of this model. We will start by deriving the Euler-Lagrange equation to (\ref{egac}) and its level-set based formulation. Experiments are then carried out solving to steady state via a gradient descent approach, thus demonstrating the strengths and the numerous weaknesses of the GAC model. In later chapters, we'll encounter models that combine and expand on this model to negate those weaknesses.
+The next sections will be devoted to investigating the practical performance of this model. We will start by deriving the Euler-Lagrange equation to \eqref{egac} and its level-set based formulation. Experiments are then carried out solving to steady state via a gradient descent approach, thus demonstrating the strengths and the numerous weaknesses of the GAC model. In later chapters, we will encounter models that combine and expand on this model to negate those weaknesses.
 
 
 \section{Euler-Lagrange equation to the GAC model}
-Some setup
+The derivation will be helped tremendously with some setup and a review of vector calculus. Let $\C: [0,1]\rightarrow \mathbf{R}^2$ be a parametrized curve, $\C = \C(p)$. We then can relate the arc length element to the parameter $p$ as $ds = \abs{C'(p)} dp$. We also want to recognize the unit tangent vector, $\tang$, unit normal, $\normal$, and curvature, $\kappa$, as 
+\begin{align*}
+\tang 
+= \frac{\C'}{\abs{\C'}},\quad 
+\normal 
+= \frac{ \tang '}{\abs{\tang'}},
+\quad\text{and}\quad 
+\kappa = \frac{ \abs{\tang'} }{ \abs{ \C' } },
+\end{align*}
+with the prime notation denoting differentiation wrt $p$. We will also assume $\C(0) = \C(1)$. 
 
+Rewriting $\egac$ as 
+\begin{align*}
+\egac = \int^{L(\C)}_0 g \, ds 
+= \int^1_0 g(\C) \abs{\C'(p)} \, dp ,
+\end{align*} 
+we can compute its first variation: 
+\begin{align*}
+\dd{}{\varepsilon} \int^1_0 g(\C + \varepsilon h) \abs{\C' + \varepsilon h'} \, dp \bigg\rvert_{\varepsilon = 0}
+&=  \int^1_0 \nabla g(\C) \cdot h \abs{\C'} + g(\C) \frac{\C'}{\abs{\C'}} \cdot h' \,dp 
+\\
+&=\int^1_0 \nabla g(\C) \cdot h \abs{\C'} + g(\C) \tang \cdot h' \,dp 
+\\
+&=\int^1_0 \nabla g \cdot h \abs{\C'} - ( g \tang)' \cdot h \, dp
+\\
+&=\int^1_0 \nabla g \cdot h \abs{\C'} - (\nabla g \cdot \C')(\tang \cdot h) - g\tang ' \cdot h \, dp
+\\
+&=\int^1_0 \nabla g \cdot h \abs{\C'} - (\nabla g \cdot \tang \abs{\C'} )(\tang \cdot h) - g\abs{\tang'} \normal \cdot h \, dp
+\\
+&=\int^1_0 \big[ \nabla g  - (\nabla g \cdot \tang )\tang \big] \cdot h \abs{\C'} - g\kappa \abs{\C'} \normal \cdot h \, dp
+\\
+&=\int^1_0 \big[\nabla g \cdot \normal \normal \big] \cdot h \abs{\C'} - g\kappa  \normal \cdot h \abs{\C'} \, dp
+\\
+&=\int^1_0 \big[ \nabla g \cdot \normal - g\kappa \big] \normal  \cdot h \abs{\C'} \, dp
+\\ 
+\end{align*}
+Our gradient descent evolution equation is thus $\C_t = \left( g(\C) \kappa - \nabla g(\C) \cdot \normal \right) \normal $.
+For the level set formulation, let $\C$ be represented by the zero level set of the function $\phi = \phi(x, t)$. We then arrive at 
+\begin{align*}
+\phi_t = \left(
+g( \abs{\nabla I } ) \Div\left( \frac{\nabla \phi}{\abs{\nabla \phi}} \right)
+	+  \nabla g(  \abs{\nabla I } )\cdot  \frac{\nabla \phi}{\abs{\nabla \phi}}
+\right) \abs{ \nabla \phi }
+= \abs{\nabla \phi} \Div\left( 
+g(  \abs{\nabla I } ) \frac{\nabla \phi}{\abs{\nabla \phi}}
+\right) .
+\end{align*}
 
 
 \section{in some later section} 
