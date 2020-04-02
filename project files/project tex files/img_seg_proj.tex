@@ -87,9 +87,12 @@
 % ...
 % ...
 % ... add your own customizations here!
+\newcommand{\C}{\mathcal{C}}
+\delimitershortfall-1sp
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
 
-
-
+\newcommand{\egac}{E_\textrm{GAC}}
 
 %   FRONTMATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -123,13 +126,13 @@
 \tableofcontents%
 \clearpage
 
-\addtoToC{List of Tables}%
-\listoftables%
-\clearpage
-
-\addtoToC{List of Figures}%
-\listoffigures%
-\clearpage
+%\addtoToC{List of Tables}%
+%\listoftables%
+%\clearpage
+%
+%\addtoToC{List of Figures}%
+%\listoffigures%
+%\clearpage
 
 
 
@@ -143,6 +146,7 @@
 \mainmatter%
 
 \chapter{Introduction}
+What do we want from image segmentation? Finding edges, and from those edges, partitioning an image into distinct regions.
 
 \begin{itemize}
 	\item Outline image segmentation problem 
@@ -157,8 +161,9 @@
 \end{itemize}
 
 
+\setkeys{Gin}{draft}\setkeys{Gin}{draft=true}
 
-
+\include{chapter_gac}
 
 %   BACK MATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -175,7 +180,7 @@
 \backmatter%
 	\addtoToC{Bibliography}
 	\bibliographystyle{plain}
-	\bibliography{references}
+	\bibliography{../../master_ref} %% compile bibtex>pdflatex
 
 \begin{appendices} % optional
 	\chapter{Code}

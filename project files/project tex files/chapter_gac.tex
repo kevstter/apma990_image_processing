@@ -1,0 +1,40 @@
+\chapter{Geodesic Active Contours}
+The first segmentation model we will review is the geodesic active contours (GAC) model from Caselles, Kimmel, and Sapiro \cite{caselles1997geodesic}. They frame segmentation to be a (near) automaticatic selection of an object or objects from an image starting from an initial contour $\C_0$. Then in order for the active contour $\C = \C(t)$ to evolve from the initial contour $\C(0) = \C_0$, they argued for the minimization of the energy 
+\begin{align}
+E_\mathrm{GAC}(\C) = \int^{L(\C)}_0 g\left( \abs{\nabla I } \right) \, ds,
+\label{egac}
+\end{align}
+where 
+\begin{align*}
+I&: \textrm{an image},
+\\
+L(\C) &: \textrm{the length of the contour $\C$,} 
+\\ 
+g(\xi)&: \textrm{an edge detector/indicator function}.
+\end{align*}
+This energy $E_\textrm{GAC}$ may be interpreted as a weighted arc length. If $g(\xi) = 1$, we would recognize $\int_\C  ds$ as standard Euclidean arc length. Hence by designing $g$ is be small near edges and large over homogeneous regions, one would expect the contour $\C$ to be drawn to and remain at object edges when minimizing $E_\textrm{GAC}$. 
+
+Before we move on, it is important to note that when we speak of minimizing $\egac$, we are seeking local minima, as $\egac$ does have the unfortunate feature that it attains a global minimum of zero when the contour contracts to a point and vanishes. We will have more on this when reviewing the results of numerical experiments.
+
+The next sections will be devoted to investigating the practical performance of this model. We will start by deriving the Euler-Lagrange equation to (\ref{egac}) and its level-set based formulation. Experiments are then carried out solving to steady state via a gradient descent approach, thus demonstrating the strengths and the numerous weaknesses of the GAC model. In later chapters, we'll encounter models that combine and expand on this model to negate those weaknesses.
+
+
+\section{Euler-Lagrange equation to the GAC model}
+Some setup
+
+
+
+\section{in some later section} 
+For two options, we may set $g$ as
+\begin{align*}
+g_1(\xi) 
+= \frac{1}{1 + \alpha\xi^2},
+\quad\text{or}\quad 
+g_2(\xi) 
+= \exp(-\beta\xi^2).
+\end{align*}
+
+
+they also point to 
+
+providing a description of the snakes/GAC model that is independent of the parameterization of the contour.
