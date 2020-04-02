@@ -89,8 +89,16 @@
 % ... add your own customizations here!
 \newcommand{\C}{\mathcal{C}}
 \delimitershortfall-1sp
-\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\abs}[1]{\lvert#1\rvert}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\newcommand{\dd}[2]{\frac{d#1}{d#2}}
+\newcommand{\pd}[2]{\frac{\partial#1}{\partial#2}}
+
+\newcommand{\tang}{\boldsymbol{\tau}}
+\newcommand{\normal}{\mathbf{n}}
+
+\DeclareMathOperator{\Div}{div}
 
 \newcommand{\egac}{E_\textrm{GAC}}
 
@@ -164,6 +172,8 @@ What do we want from image segmentation? Finding edges, and from those edges, pa
 \setkeys{Gin}{draft}\setkeys{Gin}{draft=true}
 
 \include{chapter_gac}
+
+\include{chapter_acwe}
 
 %   BACK MATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
