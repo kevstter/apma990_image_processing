@@ -1,0 +1,44 @@
+\chapter{Introduction}
+What do we want from image segmentation? Finding edges, and from those edges, partitioning an image into distinct regions.
+
+\begin{itemize}
+	\item Outline image segmentation problem 
+	
+	\item Level set conventions, $\phi>0$ for inside $\C$
+	
+	\item Standard strategy of energy minimization, useful tools: E-L, shrinkage operator
+	
+	\item Proceed as follows: present 2 models: GAC and ACWE, derive their E-L and show its capabilities and limitations.
+	
+	\item Convexification of ACWE and a combined model: GCS, derive E-L with regularization. Give split bregman solution
+	
+	\item Conclusion
+\end{itemize}
+
+\section{Notation}
+There should be a section giving standard notation used throughout the project.
+
+
+\begin{itemize}
+	\item $I$: 2-D image.
+	
+	\item $\Omega$: image domain.
+	
+	\item $\Sigma$: subset of the image domain $\Omega$, $\Sigma \subset \Omega$.
+	
+	\item $\C$: curve/contour, typically closed with well-defined inside and outside. This may also represent a collection of (closed) contours, $\C = \cup_{k \in S} \C_k$.
+	
+	\item $t$: time parameter. 
+	
+	\item $s$: arc length parameter.
+	
+	\item $\kappa$: curvature. 
+	
+	\item $\phi$: level set function whose zero level set represents some contour $\C$ at time $t$, i.e. $\C = \{(x,y) \in \Omega \mid \phi(x,y,t) = 0\}$. 
+	
+	\item $\mathbf{1}_\Sigma$: indicator/characteristic function of the subset $\Sigma$, i.e. $\mathbf{1}_\Sigma(x) = 1 \iff x \in \Sigma$.
+	
+	\item $\lambda, \mu$: regularization parameters.
+	
+	\item $H$: Heaviside function
+\end{itemize}
