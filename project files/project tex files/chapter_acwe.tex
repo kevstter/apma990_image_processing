@@ -5,12 +5,12 @@ The active contours without edges (ACWE) model developed by Chan and Vese \cite{
 \begin{align}
 \eacwe(\C, c_1, c_2, \lambda)
 = \textrm{ Length($\C$) } 
-+ \lambda \int_{\Sigma} (c_1 - f )^2 \,dx
-+ \lambda \int_{\Omega \setminus \Sigma} (c_2 - f )^2 \,dx.
++ \lambda \int_{\Sigma} (c_1 - f )^2 \dx
++ \lambda \int_{\Omega \setminus \Sigma} (c_2 - f )^2 \dx.
 \end{align}
 The last two terms of $\eacwe$ are the fitting terms we were referring to and within them two key quantities, $c_1, c_2 \in \mathbf{R}$, are introduced. They are best understood with a simple piecewise constant image with 2 homogeneous regions, see Figure \ref{fig:fitting}. Suppose the gray levels of the image are 0 and 1, with 1 being maximum intensity. Then with the contour as set in Figure \ref{fig:gull}, $c_1 = 1$ and $c_2 = 0$ would minimize the fitting terms (each integral would evaluate to zero). However if for example the contour was initialized as in \Cref{fig:tiger} or \Cref{fig:mouse}, then no matter the choice of $c_1$ and $c_2$, one or both fitting terms will be positive. Consequently, minimizing $\eacwe$ would drive the contour towards the ``best fit'' without relying image gradients.
 
-In the following sections, we will derive an Euler-Lagrange equation and solve to steady state by gradient descent. We won't guarantee there will be useful observations but hopefully we will note some strengths and weaknesses of this model.
+In the following sections, we will derive an Euler-Lagrange equation and solve to steady state by gradient descent. We won't guarantee there will be useful observations but hopefully we can note some strengths and weaknesses of this model.
 
 \begin{figure}
 	\centering
@@ -42,26 +42,66 @@ To be clear, minimizing $\eacwe$ is very hard as there is $\C$ (or equivalently 
 
 Fixing $\C$, it is then elementary calculus to determine $c_1$ and $c_2$: 
 \begin{align*}
-0 = \pd{\eacwe}{c_1}  = 2\lambda \int_{\Sigma} (c_1 - f ) \,dx
+0 = \pd{\eacwe}{c_1}  = 2\lambda \int_{\Sigma} (c_1 - f ) \dx
 &\implies 
-c_1 = \frac{1}{\abs{\Sigma}} \int_{\Sigma} f \,dx,
+c_1 = \frac{1}{\abs{\Sigma}} \int_{\Sigma} f \dx,
 \\
-0 = \pd{\eacwe}{c_2}  = 2\lambda \int_{\Omega\setminus \Sigma} (c_2 - f )\,dx
+0 = \pd{\eacwe}{c_2}  = 2\lambda \int_{\Omega\setminus \Sigma} (c_2 - f )\dx
 &\implies 
-c_2 = \frac{1}{\abs{\Omega\setminus\Sigma}} \int_{\Omega\setminus \Sigma} f \,dx,
+c_2 = \frac{1}{\abs{\Omega\setminus\Sigma}} \int_{\Omega\setminus \Sigma} f \dx,
 \end{align*}
-where we used $\abs{\cdot}$ to denote the area of a set. Next to derive the Euler-Lagrange to $\eacwe$, we will first rewrite it in terms of a level set function as we would like to move the dependence of the fitting terms on $\Sigma$ directly into the integrand. The three terms forming $\eacwe$ can be expressed as 
-\begin{align*}
+where we used $\abs{\cdot}$ to denote the area of a set. Next to derive the Euler-Lagrange equation to $\eacwe$, we must first rewrite it in terms of a level set function to move the dependence of the fitting terms on $\Sigma$ directly into the integrand. The three terms forming $\eacwe$ can be expressed as 
+\begin{align}
 \textrm{Length}(\C) 
 = \textrm{Perimeter}(\Sigma) 
-= \int_{\Omega} \abs{\nabla \mathbf{1}_\Sigma(x)} \,dx
-= \int_{\Omega} \abs{ \nabla H(\phi(x)) } \,dx
+&= \int_{\Omega} \abs{\nabla \mathbf{1}_\Sigma(x)} \dx
+= \int_{\Omega} \abs{ \nabla H(\phi(x)) } \dx,
+\label{eacwe1}
+\\
+\int_{\Sigma} (c_1 - f(x) )^2 \, d\Omega 
+&= \int_{\Omega} (c_1 - f(x))^2 H(\phi(x)) \, d\Omega
+\\
+\int_{\Omega\setminus\Sigma} (c_2 - f(x))^2 \dx 
+&=
+\int_{\Omega} (c_2 - f(x))^2 (1 - H(\phi(x))) \dx
+\end{align}
+The trouble with differentiating the Heaviside function is handled by subsituting with a regularized version: $H_\varepsilon \in C^2$, and $H_\varepsilon \rightarrow H$ as $\varepsilon\rightarrow 0$ and denote $\delta_\varepsilon = H'_\varepsilon$. The regularized energy (which we will continue to call $\eacwe$ for convenience) is then 
+\begin{align*}
+\eacwe(\phi) 
+&= \int_{\Omega } \abs{\nabla H_\varepsilon(\phi(x))} \dx 
++ \int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) \, d\Omega 
++ \int_{\Omega} (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx
+\\
+&= \int_{\Omega } \delta_\varepsilon(\phi(x)) \abs{\nabla \phi(x)} \dx 
++ \int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) \, d\Omega 
++ \int_{\Omega} (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx,
 \end{align*}
-
-
-
-
-
+and its first variation
+\begin{align*}
+\dd{}{\gamma}\eacwe(\phi + \gamma h) \bigg\rvert_{\gamma = 0}
+&= \int_{\Omega} \delta'_\varepsilon(\phi) \abs{\nabla \phi} h + \delta_\varepsilon(\phi) \frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \nabla h \dx
++ \int_{\Omega} \underbrace{\left[(c_1 - f)^2 - (c_2 - f)^2 \right]}_{=r(x)} \delta_\varepsilon(\phi) h \dx 
+\\
+&= \int_{\Omega } \delta'_\varepsilon \abs{\nabla \phi} h
+- \Div\left(\delta_\varepsilon\frac{\nabla \phi}{\abs{\nabla \phi}}  \right)  h
+\dx 
++ \int_\Gamma h\delta_\varepsilon\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma 
++ \int_{\Omega} r \delta_\varepsilon h \dx
+\\
+&= \int_{\Omega} \delta_\varepsilon\left[ 
+- \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) + r
+\right] h\dx 
++ \int_\Gamma h\delta_\varepsilon\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma. 
+\end{align*}
+The gradient descent evolution is thus 
+\begin{align*}
+\phi_t 
+= \delta_\epsilon(\phi) \left[ 
+\Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) - (c_1 - f)^2 + (c_2 - f)^2 
+\right]
+\end{align*}
+with boundary condition $\delta_\varepsilon 
+\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal = 0$.
 
 
 
