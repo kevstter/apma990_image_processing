@@ -1,2 +1,69 @@
 \chapter{Active Contours Without Edges}
-Where models such as GAC relied on an edge indicator function and thus are susceptible to related issues such as computing gradients (highly problematic with noisy images) and are highly dependent on initial conditions, the active contours without edges (ACWE) model proposed by Chan and Vese \cite{chan2001active}
+The previous section we review the GAC model and outlined its shortcomings. Perhaps the key deficiency of that model is its sensitivity to initial condition and thus relies heavily on user input to generate the desired result. It is also an edge-based model, and expects homogeneous regions to be separated by sharp transitions characterized by large gradients. This we saw could lead to poor performance on noisy images and may require additional preprocessing.
+
+The active contours without edges (ACWE) model developed by Chan and Vese \cite{chan2001active} resolves this problem by proposing an energy based upon 2 fitting terms (for 2-phase segmentation). The energy they sought to minimize is 
+\begin{align}
+\eacwe(\C, c_1, c_2, \lambda)
+= \textrm{ Length($\C$) } 
++ \lambda \int_{\Sigma} (c_1 - f )^2 \,dx
++ \lambda \int_{\Omega \setminus \Sigma} (c_2 - f )^2 \,dx.
+\end{align}
+The last two terms of $\eacwe$ are the fitting terms we were referring to and within them two key quantities, $c_1, c_2 \in \mathbf{R}$, are introduced. They are best understood with a simple piecewise constant image with 2 homogeneous regions, see Figure \ref{fig:fitting}. Suppose the gray levels of the image are 0 and 1, with 1 being maximum intensity. Then with the contour as set in Figure \ref{fig:gull}, $c_1 = 1$ and $c_2 = 0$ would minimize the fitting terms (each integral would evaluate to zero). However if for example the contour was initialized as in \Cref{fig:tiger} or \Cref{fig:mouse}, then no matter the choice of $c_1$ and $c_2$, one or both fitting terms will be positive. Consequently, minimizing $\eacwe$ would drive the contour towards the ``best fit'' without relying image gradients.
+
+In the following sections, we will derive an Euler-Lagrange equation and solve to steady state by gradient descent. We won't guarantee there will be useful observations but hopefully we will note some strengths and weaknesses of this model.
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.31\textwidth}
+%		\includegraphics[width=\textwidth]{gull}
+		\caption{A gull}
+		\label{fig:gull}
+	\end{subfigure}
+	~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
+	%(or a blank line to force the subfigure onto a new line)
+	\begin{subfigure}[b]{0.31\textwidth}
+%		\includegraphics[width=\textwidth]{tiger}
+		\caption{A tiger}
+		\label{fig:tiger}
+	\end{subfigure}
+	~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
+	%(or a blank line to force the subfigure onto a new line)
+	\begin{subfigure}[b]{0.31\textwidth}
+%		\includegraphics[width=\textwidth]{mouse}
+		\caption{A mouse}
+		\label{fig:mouse}
+	\end{subfigure}
+	\caption{Pictures of animals}\label{fig:fitting}
+\end{figure}
+
+
+\section{Euler-Lagrange equation for the ACWE model}
+To be clear, minimizing $\eacwe$ is very hard as there is $\C$ (or equivalently $\Sigma$), $c_1$, and $c_2$ to consider. Rather than simultaneous minimization wrt $\C$, $c_1$, and $c_2$, we will follow the clever alternating minimization scheme suggested in \cite{chan2001active}. The procedure will be to optimize first wrt $c_1$ and $c_2$ with $\C$ fixed, then with $c_1$ and $c_2$ determined, minimize wrt $\C$.
+
+Fixing $\C$, it is then elementary calculus to determine $c_1$ and $c_2$: 
+\begin{align*}
+0 = \pd{\eacwe}{c_1}  = 2\lambda \int_{\Sigma} (c_1 - f ) \,dx
+&\implies 
+c_1 = \frac{1}{\abs{\Sigma}} \int_{\Sigma} f \,dx,
+\\
+0 = \pd{\eacwe}{c_2}  = 2\lambda \int_{\Omega\setminus \Sigma} (c_2 - f )\,dx
+&\implies 
+c_2 = \frac{1}{\abs{\Omega\setminus\Sigma}} \int_{\Omega\setminus \Sigma} f \,dx,
+\end{align*}
+where we used $\abs{\cdot}$ to denote the area of a set. Next to derive the Euler-Lagrange to $\eacwe$, we will first rewrite it in terms of a level set function as we would like to move the dependence of the fitting terms on $\Sigma$ directly into the integrand. The three terms forming $\eacwe$ can be expressed as 
+\begin{align*}
+\textrm{Length}(\C) 
+= \textrm{Perimeter}(\Sigma) 
+= \int_{\Omega} \abs{\nabla \mathbf{1}_\Sigma(x)} \,dx
+= \int_{\Omega} \abs{ \nabla H(\phi(x)) } \,dx
+\end{align*}
+
+
+
+
+
+
+
+
+
+
