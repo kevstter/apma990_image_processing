@@ -59,11 +59,13 @@ we can compute its first variation:
 Our gradient descent evolution equation is thus $\C_t = \left( g(\C) \kappa - \nabla g(\C) \cdot \normal \right) \normal $.
 For the level set formulation, let $\C$ be represented by the zero level set of the function $\phi = \phi(x, t)$. We then arrive at 
 \begin{align*}
-\phi_t = \left(
+\phi_t 
+&= \left(
 g( \abs{\nabla I } ) \Div\left( \frac{\nabla \phi}{\abs{\nabla \phi}} \right)
 	+  \nabla g(  \abs{\nabla I } )\cdot  \frac{\nabla \phi}{\abs{\nabla \phi}}
 \right) \abs{ \nabla \phi }
-= \abs{\nabla \phi} \Div\left( 
+\\
+&= \abs{\nabla \phi} \Div\left( 
 g(  \abs{\nabla I } ) \frac{\nabla \phi}{\abs{\nabla \phi}}
 \right) .
 \end{align*}
@@ -83,3 +85,5 @@ g_2(\xi)
 they also point to 
 
 providing a description of the snakes/GAC model that is independent of the parameterization of the contour.
+
+unable to capture interior contours automatically
