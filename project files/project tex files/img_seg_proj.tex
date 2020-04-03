@@ -60,6 +60,8 @@
 % ...
 % ...
 % ... add your own packages here!
+\usepackage{subcaption}
+\usepackage{cleveref}
 
 
 
@@ -101,6 +103,7 @@
 \DeclareMathOperator{\Div}{div}
 
 \newcommand{\egac}{E_\textrm{GAC}}
+\newcommand{\eacwe}{E_\textrm{ACWE}}
 
 %   FRONTMATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -153,23 +156,9 @@
 
 \mainmatter%
 
-\chapter{Introduction}
-What do we want from image segmentation? Finding edges, and from those edges, partitioning an image into distinct regions.
-
-\begin{itemize}
-	\item Outline image segmentation problem 
-	
-	\item Standard strategy of energy minimization, useful tools: E-L, shrinkage operator
-	
-	\item Proceed as follows: present 2 models: GAC and ACWE, derive their E-L and show its capabilities and limitations.
-	
-	\item Convexification of ACWE and a combined model: GCS, derive E-L with regularization. Give split bregman solution
-	
-	\item Conclusion
-\end{itemize}
-
-
 \setkeys{Gin}{draft}\setkeys{Gin}{draft=true}
+
+\include{chapter_intro}
 
 \include{chapter_gac}
 
