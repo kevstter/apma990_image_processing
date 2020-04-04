@@ -1,9 +1,16 @@
 \chapter{Globally Convex Segmentation}
-Numerical experiments in the two models, GAC and ACWE, show that there is certainly room for improvement from the modelling perspective. Of particular concern are the models nack for finding and getting stuck at local minima (by design, in case of the GAC model), and therefore the solution attained is dependent on the initial contour. These issues are address by Chan, Esedo\={g}lu, and Nikolova \cite{chan2006algorithms}, and their ideas further refined by Bresson et al \cite{bresson2007fast}, in what they referred to as the convexification of the ACWE model.
+Numerical experiments in the two models, GAC and ACWE, show that there is certainly room for improvement from the modelling perspective. Of particular concern are the models knack for finding and getting stuck at local minima (by design, in case of the GAC model), and therefore the solution attained is dependent on the initial contour. These issues are address by Chan, Esedo\={g}lu, and Nikolova \cite{chan2006algorithms}, and their ideas further refined by Bresson et al \cite{bresson2007fast}, in what they referred to as the convexification of the ACWE model and the unification of two models we have considered.
 
-First, it is important to understand the nature of the non-convexity in the ACWE model. Restating the optimization problem in terms of indicator functions, we have 
+Before going in depth, we should explain that in this chapter our viewpoint on the segmentation problem shifts somewhat. In the previous models, the viewpoint was mainly on an active contours and its evolution. However in the GCS model, the viewpoint is centred about indicator functions (of sets). Keep in mind that for 2-phase segmentation, any subset $\Sigma \subset \Omega$, and equivalently the corresponding indicator function $\ind_\Sigma$, defines a segmentation of the image domain. In what follows, the goal will arriving at an indicator function $u(x) = \ind_\Sigma(x)$, and the piecewise constant solution $\tilde u(x) = c_1 \ind_\Sigma(x) + c_2 (1 - \ind_\Sigma(x))$. In other words, the problem may instead be framed as optimizating over functions that take only two values to find the best approximation to a given image $f$.
+
+But first it is important to understand the nature of the non-convexity in the ACWE model. Restating the optimization problem in terms of indicator functions, we have 
 \begin{align*}
-\min_{\Sigma\subset\Omega} \eacwe(\ind_\Sigma(x)), c_1, c_2; \lambda) 
+\min_{\substack{\Sigma\subset\Omega \\ 
+		u(x) = \ind_\Sigma(x)}} \eacwe(u, c_1, c_2; \lambda)
+= \int_{\Omega} \abs{\nabla u} \dx 
++ \int_\Omega u(c_1 - f)^2   + (1-u)(c_2 - f)^2 \dx .
 \end{align*}
+The non-convexity is due to functions we 
 
-Because of the nonconvex nature, 
+
+
