@@ -1,4 +1,5 @@
 \chapter{Geodesic Active Contours}
+\label{ch:gac}
 The first segmentation model we will review is the geodesic active contours (GAC) model from Caselles, Kimmel, and Sapiro \cite{caselles1997geodesic}. They frame segmentation to be a (near) automaticatic selection of an object or objects from an image starting from an initial contour $\C_0$. Then in order for the active contour $\C = \C(t)$ to evolve from the initial contour $\C(0) = \C_0$, they argued for the minimization of the energy 
 \begin{align}
 E_\mathrm{GAC}(\C) = \int^{L(\C)}_0 g\left( \abs{\nabla I } \right) \, ds,

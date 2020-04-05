@@ -1,16 +1,72 @@
 \chapter{Globally Convex Segmentation}
-Numerical experiments in the two models, GAC and ACWE, show that there is certainly room for improvement from the modelling perspective. Of particular concern are the models knack for finding and getting stuck at local minima (by design, in case of the GAC model), and therefore the solution attained is dependent on the initial contour. These issues are address by Chan, Esedo\={g}lu, and Nikolova \cite{chan2006algorithms}, and their ideas further refined by Bresson et al \cite{bresson2007fast}, in what they referred to as the convexification of the ACWE model and the unification of two models we have considered.
+Numerical experiments in the two models, GAC and ACWE, show that there is certainly room for improvement from the modelling perspective. Of particular concern are the models knack for finding and getting stuck at local minima (by design, in case of the GAC model), and therefore the solution attained is dependent on the initial contour. These issues are address by Chan, Esedo\={g}lu, and Nikolova \cite{chan2006algorithms}, and their ideas further refined by Bresson et al. \cite{bresson2007fast}, in what they referred to as the convexification of the ACWE model and the unification of two models we have considered.
 
 Before going in depth, we should explain that in this chapter our viewpoint on the segmentation problem shifts somewhat. In the previous models, the viewpoint was mainly on an active contours and its evolution. However in the GCS model, the viewpoint is centred about indicator functions (of sets). Keep in mind that for 2-phase segmentation, any subset $\Sigma \subset \Omega$, and equivalently the corresponding indicator function $\ind_\Sigma$, defines a segmentation of the image domain. In what follows, the goal will arriving at an indicator function $u(x) = \ind_\Sigma(x)$, and the piecewise constant solution $\tilde u(x) = c_1 \ind_\Sigma(x) + c_2 (1 - \ind_\Sigma(x))$. In other words, the problem may instead be framed as optimizating over functions that take only two values to find the best approximation to a given image $f$.
 
 But first it is important to understand the nature of the non-convexity in the ACWE model. Restating the optimization problem in terms of indicator functions, we have 
-\begin{align*}
+\begin{align}
 \min_{\substack{\Sigma\subset\Omega \\ 
-		u(x) = \ind_\Sigma(x)}} \eacwe(u, c_1, c_2; \lambda)
+		u(x) = \ind_\Sigma(x)}} 
+\left\{\eacwe(u, c_1, c_2; \lambda)
 = \int_{\Omega} \abs{\nabla u} \dx 
-+ \int_\Omega u(c_1 - f)^2   + (1-u)(c_2 - f)^2 \dx .
-\end{align*}
-The non-convexity is due to functions we 
++ \int_\Omega u(c_1 - f)^2   + (1-u)(c_2 - f)^2 \dx 
+\right\}.
+\label{eq:eacwe2}
+\end{align}
+Observe that the function set we are optimizing over is not convex. For instance suppose $\Sigma_1, \Sigma_2 \subset \Omega$, $\Sigma_1 \cap \Sigma_2 = \emptyset$, $\Omega \setminus (\Sigma_1 \cup \Sigma_2) \neq \emptyset$ and set $u_1 = \ind_{\Sigma_1}$ and $u_2 = \ind_{\Sigma_2}$. Then any convex combination $w = ku_1 + (1-k)u_2$, $k \in (0,1)$, would be a function that takes on three values. 
 
+In the next section are two key theorems which will allow that constraint to be relaxed, i.e. allow $u$ to take on the continuum of values between 0 and 1, and lead to an equivalent but convex minimization problem.
+
+\section{A unified GAC+ACWE convex segmentation model}
+We first start the key observation that in choosing a non-compactly support $\delta_\epsilon$ in the gradient descent evolution \eqref{eq:acwe_el}, the following will have the same steady state solutions: 
+\begin{align*}
+\phi_t = \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) 
+- \lambda (c_1 - f)^2 + \lambda (c_2 - f)^2 .
+\end{align*}
+This in turn is the gradient descent equation the following energy:
+\begin{align}
+E(\phi, c_1, c_2) 
+= \int_\Omega \abs{\nabla \phi} \dx 
++ \lambda \int_\Omega \big[ (c_1 - f)^2 - (c_2 - f)^2 \big] \phi \dx ,
+\label{eq:mod_acwe}
+\end{align}
+which gets us to the first of two key theorems from \cite{chan2006algorithms}.
+
+\begin{thm}
+	For any given fixed $c_1, c_2 \in \mathbf{R}$, a global minimizer for $\eacwe(\cdot, c_1, c_2; \lambda)$ can be found by carrying out the following convex minimization: 
+	\begin{align}
+	\min_{0\leq u \leq 1}\left\{
+		\tilde E_{\textrm{ACWE}} (u, c_1, c_2; \lambda)
+		=
+		\int_{\Omega} \abs{\nabla u} \dx 
+	+ \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] u(x) \dx
+	\right\}
+	\label{eq:thm1}
+	\end{align}
+	and then setting $\Sigma = \{ x \mid u(x) \geq \mu \}$ for a.e. $\mu \in [0, 1]$.
+\end{thm}
+The theorem above links the two energies, $\eacwe$ and $\tilde E_\textrm{ACWE}$,
+and guarantees that any global minimum of \eqref{eq:mod_acwe} is only a thresholding step away from a global minimum of the ACWE model. The next theorem is but one way to tackle \eqref{eq:thm1}.
+
+\begin{thm}
+	Let $r(x) \in L^\infty(\Omega)$. Then the convex, constrained minimization problem
+	\begin{align*}
+	\min_{0 \leq u \leq 1} \int_{\Omega} \abs{\nabla u} \dx + \lambda \int_{\Omega} r(x) u \dx 
+	\end{align*}
+	has the same set of minimizers as the following convex, unconstrained minimization problem:
+	\begin{align*}
+	\min_u \int_{\Omega} \abs{\nabla u} \dx + \lambda \int_{\Omega} r(x) u + \alpha \nu(u) \dx 
+	\end{align*}
+	where $\nu(\xi) = \max\{ 0 , 2\abs{\xi - \frac{1}{2} } - 1\}$, provided that $\alpha > \frac{\lambda}{2}\norm{r(x)}_{L^\infty(\Omega)}$.
+\end{thm}
+The term $\alpha\nu(u)$ is an exact penalty term \cite{hiriart1993convexI,hiriart1993convexII}. The advantage of this new unconstrained formulation is that it is quite straightforward to derive the Euler-Lagrange equation and solve by gradient descent. But before doing so, we will add one more modification and give a unified globally convex segmentation (GCS) model.
+
+Per Bresson et al. \cite{bresson2007fast}, they propose minimization of the energy 
+\begin{align}
+\egcs(u, c_1, c_2; \lambda) = 
+\int_{\Omega} g(x)  \abs{\nabla u} \dx 
++ \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] u(x) \dx,
+\end{align}
+where $g$ is an edge indicator function as in \Cref{ch:gac}.
 
 

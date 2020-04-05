@@ -69,37 +69,38 @@ The trouble with differentiating the Heaviside function is handled by subsitutin
 \begin{align*}
 \eacwe(\phi) 
 &= \int_{\Omega } \abs{\nabla H_\varepsilon(\phi(x))} \dx 
-+ \int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) \, d\Omega 
-+ \int_{\Omega} (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx
++ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) \, d\Omega 
++ \lambda\int_{\Omega} (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx
 \\
 &= \int_{\Omega } \delta_\varepsilon(\phi(x)) \abs{\nabla \phi(x)} \dx 
-+ \int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) \, d\Omega 
-+ \int_{\Omega} (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx,
++ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) \, d\Omega 
++ \lambda\int_{\Omega} (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx,
 \end{align*}
 and its first variation
 \begin{align*}
 \dd{}{\gamma}\eacwe(\phi + \gamma h) \bigg\rvert_{\gamma = 0}
 &= \int_{\Omega} \delta'_\varepsilon(\phi) \abs{\nabla \phi} h + \delta_\varepsilon(\phi) \frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \nabla h \dx
-+ \int_{\Omega} \underbrace{\left[(c_1 - f)^2 - (c_2 - f)^2 \right]}_{=r(x)} \delta_\varepsilon(\phi) h \dx 
++ \lambda\int_{\Omega} \underbrace{\left[(c_1 - f)^2 - (c_2 - f)^2 \right]}_{=r(x)} \delta_\varepsilon(\phi) h \dx 
 \\
 &= \int_{\Omega } \delta'_\varepsilon \abs{\nabla \phi} h
 - \Div\left(\delta_\varepsilon\frac{\nabla \phi}{\abs{\nabla \phi}}  \right)  h
 \dx 
 + \int_\Gamma h\delta_\varepsilon\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma 
-+ \int_{\Omega} r \delta_\varepsilon h \dx
++ \lambda\int_{\Omega} r \delta_\varepsilon h \dx
 \\
 &= \int_{\Omega} \delta_\varepsilon\left[ 
-- \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) + r
+- \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) + \lambda r
 \right] h\dx 
 + \int_\Gamma h\delta_\varepsilon\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma. 
 \end{align*}
 The gradient descent evolution is thus 
-\begin{align*}
+\begin{align}
 \phi_t 
 = \delta_\epsilon(\phi) \left[ 
-\Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) - (c_1 - f)^2 + (c_2 - f)^2 
+\Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) - \lambda (c_1 - f)^2 + \lambda (c_2 - f)^2 
 \right]
-\end{align*}
+\label{eq:acwe_el}
+\end{align}
 with boundary condition $\delta_\varepsilon 
 \frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal = 0$.
 
