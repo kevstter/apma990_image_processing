@@ -17,7 +17,7 @@ Observe that the function set we are optimizing over is not convex. For instance
 
 In the next section are two key theorems which will allow that constraint to be relaxed, i.e. allow $u$ to take on the continuum of values between 0 and 1, and lead to an equivalent but convex minimization problem.
 
-\section{A unified GAC+ACWE convex segmentation model}
+\section{A unified GAC \& ACWE convex segmentation model}
 We first start the key observation that in choosing a non-compactly support $\delta_\epsilon$ in the gradient descent evolution \eqref{eq:acwe_el}, the following will have the same steady state solutions: 
 \begin{align*}
 \phi_t = \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) 
@@ -44,6 +44,7 @@ which gets us to the first of two key theorems from \cite{chan2006algorithms}.
 	\label{eq:thm1}
 	\end{align}
 	and then setting $\Sigma = \{ x \mid u(x) \geq \mu \}$ for a.e. $\mu \in [0, 1]$.
+	\label{thm:1}
 \end{thm}
 The theorem above links the two energies, $\eacwe$ and $\tilde E_\textrm{ACWE}$,
 and guarantees that any global minimum of \eqref{eq:mod_acwe} is only a thresholding step away from a global minimum of the ACWE model. The next theorem is but one way to tackle \eqref{eq:thm1}.
@@ -58,15 +59,27 @@ and guarantees that any global minimum of \eqref{eq:mod_acwe} is only a threshol
 	\min_u \int_{\Omega} \abs{\nabla u} \dx + \lambda \int_{\Omega} r(x) u + \alpha \nu(u) \dx 
 	\end{align*}
 	where $\nu(\xi) = \max\{ 0 , 2\abs{\xi - \frac{1}{2} } - 1\}$, provided that $\alpha > \frac{\lambda}{2}\norm{r(x)}_{L^\infty(\Omega)}$.
+	\label{thm:2}
 \end{thm}
-The term $\alpha\nu(u)$ is an exact penalty term \cite{hiriart1993convexI,hiriart1993convexII}. The advantage of this new unconstrained formulation is that it is quite straightforward to derive the Euler-Lagrange equation and solve by gradient descent. But before doing so, we will add one more modification and give a unified globally convex segmentation (GCS) model.
+The term $\alpha\nu(u)$ is an exact penalty term \cite{hiriart1993convexI,hiriart1993convexII}. The advantage of this new unconstrained formulation is that it is quite straightforward to derive the Euler-Lagrange equation and solve by gradient descent. But before doing so, we will add one more modification to give a unified globally convex segmentation (GCS) model.
 
-Per Bresson et al. \cite{bresson2007fast}, they propose minimization of the energy 
+Per Bresson et al. \cite{bresson2007fast}, building on the work of \cite{chan2006algorithms}, they propose minimization of the energy 
 \begin{align}
 \egcs(u, c_1, c_2; \lambda) = 
 \int_{\Omega} g(x)  \abs{\nabla u} \dx 
 + \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] u(x) \dx,
 \end{align}
-where $g$ is an edge indicator function as in \Cref{ch:gac}.
+where $g$ is an edge indicator function as in \Cref{ch:gac}. Furthermore, if $u$ is an indicator function, then
+\begin{align*}
+\egcs(\ind_\Sigma(x), c_1, c_2; \lambda) 
+&= \int_{\Omega} g(x)  \abs{\nabla \ind_\Sigma(x)} \dx 
++ \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] \ind_\Sigma(x) \dx
+\\
+&= \egac(\partial \Sigma) +  \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] \ind_\Sigma(x) \dx
+\end{align*}
+reduces to the familiar GAC energy but now subject to an ACWE-type fitting energy constraint. Finally, also note that $\egcs$ satisfies statements same as those in Theorem \ref{thm:1} and \ref{thm:2}, but with $\int g\abs{\nabla u}$ in place of $\int \abs{\nabla u}$.
 
+The next section will not be just one, but two numerical algorithms for image segmentation under the GCS model. In addition to the usual Euler-Lagrange equation and gradient descent, we will also discuss application of the Split Bregman method \cite{goldstein2010geometric,goldstein2009split} to this segmentation model.
+
+\section{Minimization of the GCS model: gradient descent and the Split Bregman}
 
