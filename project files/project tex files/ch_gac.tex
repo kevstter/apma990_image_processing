@@ -1,27 +1,33 @@
 \chapter{Geodesic Active Contours}
 \label{ch:gac}
-The first segmentation model we will review is the geodesic active contours (GAC) model from Caselles, Kimmel, and Sapiro \cite{caselles1997geodesic}. They frame segmentation to be a (near) automaticatic selection of an object or objects from an image starting from an initial contour $\C_0$. Then in order for the active contour $\C = \C(t)$ to evolve from the initial contour $\C(0) = \C_0$, they argued for the minimization of the energy 
+The first segmentation model we review is the geodesic active contours (GAC) model from Caselles, Kimmel, and Sapiro \cite{caselles1997geodesic}. Their model of segmentation is the (near) automaticatic selection of an object or objects from an image once an initial contour $\C_0$ is prescribed. To get an active contour $\C = \C(t)$ with $\C(0) = \C_0$, they argued for the minimization of the energy 
 \begin{align}
-E_\mathrm{GAC}(\C) = \int^{L(\C)}_0 g\left( \abs{\nabla I } \right) \, ds,
-\label{egac}
+E_\mathrm{GAC}(\C) = \int^{L(\C)}_0 g\left( \abs{\nabla f } \right) \, ds,
+\label{eq:egac}
 \end{align}
 where 
 \begin{align*}
-I&: \textrm{an image},
+f&: \textrm{initial image},
 \\
 L(\C) &: \textrm{the length of the contour $\C$,} 
 \\ 
-g(\xi)&: \textrm{an edge detector/indicator function}.
+g(\xi)&: \textrm{an edge indicator function}.
 \end{align*}
-This energy $E_\textrm{GAC}$ may be interpreted as a weighted arc length. If $g(\xi) = 1$, we would recognize $\int_\C  ds$ as standard Euclidean arc length. Hence by designing $g$ is be small near edges and large over homogeneous regions, one would expect the contour $\C$ to be drawn to and remain at object edges when minimizing $E_\textrm{GAC}$. 
+The energy $E_\textrm{GAC}$ may be interpreted as a weighted arc length. If $g(\xi) = 1$, we would recognize $\int_\C  ds$ as standard Euclidean arc length. Hence by designing $g$ is be small near edges and large over homogeneous regions, one would expect the contour $\C$ to be drawn to and remain at object edges when minimizing $E_\textrm{GAC}$. As an example, one may set $g$ as 
+\begin{align*}
+g_1(\xi) 
+= \frac{1}{1 + \alpha\xi^2},
+\quad\text{or}\quad 
+g_2(\xi) 
+= \exp(-\beta\xi^2).
+\end{align*}
+Notice that as $\abs{\xi} \rightarrow \infty$, $g_1,g_2 \rightarrow 0$.  
 
-Before we move on, it is important to note that when we speak of minimizing $\egac$, we are seeking local minima, as $\egac$ does have the unfortunate feature that it attains a global minimum of zero when the contour contracts to a point and vanishes. We will have more on this when reviewing the results of numerical experiments.
-
-The next sections will be devoted to investigating the practical performance of this model. We will start by deriving the Euler-Lagrange equation to \eqref{egac} and its level-set based formulation. Experiments are then carried out solving to steady state via a gradient descent approach, thus demonstrating the strengths and the numerous weaknesses of the GAC model. In later chapters, we will encounter models that combine and expand on this model to negate those weaknesses.
+In the next section, we will derive the Euler-Lagrange equation and minimize $\egac$ by gradient descent. However, before we move on, let us note that we are seeking local minima when minimizing $\egac$ as this energy does have the unfortunate feature that it attains a global minimum of zero when the contour contracts to a point and vanishes. We will revisit this issue when reviewing the results of the numerical examples.
 
 
 \section{Euler-Lagrange equation to the GAC model}
-The derivation will be helped tremendously with some setup and a review of vector calculus. Let $\C: [0,1]\rightarrow \mathbf{R}^2$ be a parametrized curve, $\C = \C(p)$. We then can relate the arc length element to the parameter $p$ as $ds = \abs{C'(p)} dp$. We also want to recognize the unit tangent vector, $\tang$, unit normal, $\normal$, and curvature, $\kappa$, as 
+The derivation will be helped tremendously with some setup and a quick review of vector calculus. Let $\C: [0,1]\rightarrow \mathbf{R}^2$ be a parametrized curve, $\C = \C(p)$. We then can relate the arc length element to the parameter $p$ as $ds = \abs{C'(p)} dp$. We also want to recognize the unit tangent vector, $\tang$, unit (inward) normal, $\normal$, and curvature, $\kappa$, as 
 \begin{align*}
 \tang 
 = \frac{\C'}{\abs{\C'}},\quad 
@@ -30,9 +36,9 @@ The derivation will be helped tremendously with some setup and a review of vecto
 \quad\text{and}\quad 
 \kappa = \frac{ \abs{\tang'} }{ \abs{ \C' } },
 \end{align*}
-with the prime notation denoting differentiation wrt $p$. We will also assume $\C(0) = \C(1)$. 
+with the prime notation denoting differentiation w.r.t. $p$. We will also assume $\C(0) = \C(1)$. 
 
-Rewriting $\egac$ as 
+Next, rewriting $\egac$ as 
 \begin{align*}
 \egac = \int^{L(\C)}_0 g \, ds 
 = \int^1_0 g(\C) \abs{\C'(p)} \, dp ,
@@ -54,12 +60,13 @@ we can compute its first variation:
 \\
 &=\int^1_0 \big[\nabla g \cdot \normal \normal \big] \cdot h \abs{\C'} - g\kappa  \normal \cdot h \abs{\C'} \, dp
 \\
-&=\int^1_0 \big[ \nabla g \cdot \normal - g\kappa \big] \normal  \cdot h \abs{\C'} \, dp
+&=\int^1_0 \big[ \nabla g \cdot \normal - g\kappa \big] \normal  \cdot h \abs{\C'} \, dp.
 \\ 
 \end{align*}
-Our gradient descent evolution equation is thus $\C_t = \left( g(\C) \kappa - \nabla g(\C) \cdot \normal \right) \normal $.
-For the level set formulation, let $\C$ be represented by the zero level set of the function $\phi = \phi(x, t)$. We then arrive at 
-\begin{align*}
+This gives a gradient descent evolution equation $\C_t = \left( g(\C) \kappa - \nabla g(\C) \cdot \normal \right) \normal $.
+For the level set formulation, with $\phi = \phi(x, t)$ as the level set function, we have 
+\begin{align}
+\begin{split} 
 \phi_t 
 &= \left(
 g( \abs{\nabla I } ) \Div\left( \frac{\nabla \phi}{\abs{\nabla \phi}} \right)
@@ -69,22 +76,15 @@ g( \abs{\nabla I } ) \Div\left( \frac{\nabla \phi}{\abs{\nabla \phi}} \right)
 &= \abs{\nabla \phi} \Div\left( 
 g(  \abs{\nabla I } ) \frac{\nabla \phi}{\abs{\nabla \phi}}
 \right) .
-\end{align*}
+\end{split}
+\label{eq:gac_ls}
+\end{align}
 
+\section{Numerical discretization and examples}
+To discretize \eqref{eq:gac_ls}, we will use the semi-implicit Gauss-Seidel type numerical scheme proposed by Aubert and Vese \cite{aubert1997variational} and used to good effect by Chan and Vese with their ACWE model \cite{chan2001active} rather than using explicit forward Euler with second order centred differences as originally suggested\footnote{Although to be fair, it was suggested for ease of implementation as a proof of concept. For us, the same semi-implicit numerical scheme can and will be used again in \Cref{ch:acwe,ch:gcs} so it makes sense to give a complete presentation once and be able to reuse essentially the same code three times. } in \cite{caselles1997geodesic}.
 
 \section{in some later section} 
-For two options, we may set $g$ as
-\begin{align*}
-g_1(\xi) 
-= \frac{1}{1 + \alpha\xi^2},
-\quad\text{or}\quad 
-g_2(\xi) 
-= \exp(-\beta\xi^2).
-\end{align*}
 
-
-they also point to 
-
-providing a description of the snakes/GAC model that is independent of the parameterization of the contour.
+slightly asymmetry
 
 unable to capture interior contours automatically
