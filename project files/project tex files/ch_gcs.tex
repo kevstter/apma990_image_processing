@@ -1,4 +1,5 @@
 \chapter{Globally Convex Segmentation}
+\label{ch:gcs}
 Numerical experiments in the two models, GAC and ACWE, show that there is certainly room for improvement from the modelling perspective. Of particular concern are the models knack for finding and getting stuck at local minima (by design, in case of the GAC model), and therefore the solution attained is dependent on the initial contour. These issues are address by Chan, Esedo\={g}lu, and Nikolova \cite{chan2006algorithms}, and their ideas further refined by Bresson et al. \cite{bresson2007fast}, in what they referred to as the convexification of the ACWE model and the unification of two models we have considered.
 
 Before going in depth, we should explain that in this chapter our viewpoint on the segmentation problem shifts somewhat. In the previous models, the viewpoint was mainly on an active contours and its evolution. However in the GCS model, the viewpoint is centred about indicator functions (of sets). Keep in mind that for 2-phase segmentation, any subset $\Sigma \subset \Omega$, and equivalently the corresponding indicator function $\ind_\Sigma$, defines a segmentation of the image domain. In what follows, the goal will arriving at an indicator function $u(x) = \ind_\Sigma(x)$, and the piecewise constant solution $\widetilde u(x) = c_1 \ind_\Sigma(x) + c_2 (1 - \ind_\Sigma(x))$. In other words, the problem may instead be framed as optimizating over functions that take only two values to find the best approximation to a given image $f$.
@@ -126,12 +127,13 @@ To derive the Split Bregman formulation, we'll first restate \eqref{eq:egcs1} in
 + \frac{\theta}{2} \norm{ d - \nabla u }_2^2,
 \end{align*}
 where $\norm{d}_g = \norm{g \nabla u}_1$. For problems such as ours \footnote{For more details, one can refer to the appendix, and \cite{goldstein2009split,goldstein2010geometric}}, the Bregman iteration simplifies to the 2-step procedure 
-\begin{align*}
+\begin{align}
 (u^{k+1}, d^{k+1}) 
 &= \argmin_{0\leq u \leq 1, d}  \norm{d}_g + \lambda \langle r, u \rangle + \frac{\theta}{2} \norm{d - \nabla u - b^k }^2_2 
 \\
 b^{k+1} &= b^k - (d^k - \nabla u^k) .
-\end{align*} 
+\label{eq:sbbij}
+\end{align} 
 The Split Bregman then breaks up the first step into 2 substeps that may be iterated until convergence, effectively decoupling $u$ and $d$: 
 \begin{align}
 u^{k+1} &= \argmin_{0\leq u \leq 1} \lambda \langle r, u \rangle
@@ -144,13 +146,13 @@ d^{k+1}
 \end{align}
 Each of the substeps can be solved efficiently. We begin by tackling the solution to \eqref{eq:splitd}.
 
-To begin, let's clarify precisely what the vector norm $\norm{\cdot }_g$ is as there is more than one choice. One is isotropic, the other anisotropic, and both are covered in \cite{goldstein2009split}. We will use the isotropic version, 
+To begin, let's clarify precisely what the vector norm $\norm{\cdot }_g$ is as there is more than one choice. We will use the one referred to as isotropic TV in \cite{goldstein2009split},
 \begin{align*}
 \norm{ d }_g 
 = \sum^N_{i,j = 1} g_{ij} \norm{d_{ij}}_2 
 = \sum^{N}_{i,j = 1} g_{ij} \sqrt{ (d^x_{ij} )^2 + (d^y_{ij} )^2 }
 \end{align*}
-so \eqref{eq:splitd} is equivalently 
+in which case \eqref{eq:splitd} is equivalently 
 \begin{align*}
 \sum^{N}_{i,j = 1} g_{ij} \sqrt{ (d^x_{ij} )^2 + (d^y_{ij} )^2 }
 + \frac{\theta}{2} \sum^N_{i,j=1} \big[ (d^x_{ij} - \nabla_x u^{k+1}_{ij} - (b^x_{ij})^k)^2 
@@ -178,7 +180,7 @@ For each $(i,j)$ we can optimize by elementary calculus,
 = d^y_{ij} \left( 1 + \frac{g_{ij}}{\theta\norm{d_{ij}}_2}
 \right)
 \end{align*}
-which combines in a couple useful ways:
+which combines as 
 \begin{align*}
 \norm{\nabla u^{k+1}_{ij} + b^k_{ij}}_2^2 = \left(\norm{ d_{ij}}_2 + \frac{g_{ij}}{\theta}
 \right)^2
@@ -191,11 +193,42 @@ d_{ij}^x
 = \frac{ \nabla_x u^{k+1}_{ij} + (b^x_{ij})^k }{ \norm{\nabla u^{k+1}_{ij} + b^k_{ij} }_2} \left( \norm{\nabla u^{k+1}_{ij} + b^k_{ij} }_2 - \frac{g_{ij}}{\theta} \right), 
 \end{align*}
 and similarly for $d^y_{ij}$. Otherwise, there is one other critical point giving the minimum at $d = 0$; the full solution is typically presented as 
-\begin{align*}
+\begin{align}
 (d^x)^{k+1} 
 = \max\left( \norm{ \nabla u^{k+1} + b^k}_2 - \frac{g}{\theta}, 0 \right) \frac{ \nabla_x u^{k+1} + (b^x)^k}{ \norm{ \nabla u^{k+1} + b^k}_2}
-\end{align*}
+\label{eq:sbdij}
+\end{align}
 and likewise for $(d^y)^{k+1}$.
 
-The solution to \eqref{eq:splitu} can be found by first differentiating to get $0 = \lambda  +\theta  \nabla \cdot ( d^k - \nabla u - b^k)$ which leads to $\Delta u = \frac{\lambda}{\theta} r + \nabla \cdot (d^k - b^k)$. As the energy is quadratic in $u_{ij}$, either the optimal value is given by this PDE, or if it were outside the interval $[0,1]$, then must take either $0$ or $1$, whichever is nearer the unconstrained minimizer. 
+The solution to \eqref{eq:splitu} can be found by first differentiating to get $0 = \lambda  +\theta  \nabla \cdot ( d^k - \nabla u - b^k)$ which leads to $\Delta u = \frac{\lambda}{\theta} r + \nabla \cdot (d^k - b^k)$. As the energy is quadratic in $u_{ij}$, either the optimal value is given by this PDE, or if it were outside the interval $[0,1]$, then must take either $0$ or $1$, whichever is nearer the unconstrained minimizer. For example, with centred differencing of the Laplacian, we have 
+\begin{align}
+\widetilde u_{ij} = \frac{1}{4}\left(
+u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1} 
+- \frac{\lambda}{\theta} r_{ij}
+- \nabla_x ((d^x_{ij})^k - (b^x_{ij})^k)
+- \nabla_y((d^y_{ij})^k - (b^y_{ij})^k)
+\right) 
+\label{eq:sbuij}
+\end{align}
+and 
+\begin{align}
+u_{ij}  = \max \{ \min\{ \widetilde u_{ij}, 1 \} , 0 \}.
+\label{eq:sbuij2}
+\end{align}
+The full algorithm, to summarize, is
+\begin{enumerate}
+	\item Threshold $u^k$ to determine $\Sigma^k$, eg. $\Sigma^k = \{x\in\Omega \mid u(x) \geq 0.5 \}$.
+	\item Update $c_1, c_2$ by \Cref{eq:c1,eq:c2} with $\Sigma^k$ in place of $\Sigma$.
+	
+	\item Evaluate $r = (c_1- f)^2 - (c_2 - f)^2$.
+
+	\item Update $u^{k+1}$ by \Cref{eq:sbuij,eq:sbuij2} using one sweep of Gauss-Seidel.
+	
+	\item Update $d^{k+1} = ((d^x)^{k+1}, (d^y)^{k+1})$ by \Cref{eq:sbdij}.
+	
+	\item Update $b^{k+1} = ((b^x)^{k+1}, (b^y)^{k+1})$ by \Cref{eq:sbbij}
+	
+	\item Repeat from step 1 if $\norm{u^{k+1} - u^k} > \textrm{tol}$.
+\end{enumerate}
+With regards to step 4, the authors in \cite{goldstein2010geometric} recommend just one sweep of Gauss-Seidel rather than iterating to full convergence. The reason being that any advantage would be lost against the error in the updates to the Bregman parameter, $b^{k+1}$.
 
