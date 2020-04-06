@@ -1,4 +1,5 @@
 \chapter{Active Contours Without Edges}
+\label{ch:acwe}
 The previous section we review the GAC model and outlined its shortcomings. Perhaps the key deficiency of that model is its sensitivity to initial condition and thus relies heavily on user input to generate the desired result. It is also an edge-based model, and expects homogeneous regions to be separated by sharp transitions characterized by large gradients. This we saw could lead to poor performance on noisy images and may require additional preprocessing.
 
 The active contours without edges (ACWE) model developed by Chan and Vese \cite{chan2001active} resolves this problem by proposing an energy based upon 2 fitting terms (for 2-phase segmentation). The energy they sought to minimize is 
