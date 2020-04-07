@@ -2,13 +2,14 @@
 \label{ch:acwe}
 The previous section we review the GAC model and outlined its shortcomings. Perhaps the key deficiency of that model is its sensitivity to initial condition and heavy reliance on user directed input to generate the desired result. It is also an edge-based model, and expects homogeneous regions to be separated by sharp transitions characterized by large gradients. This we saw led to poor performance on noisy images.
 
-The active contours without edges (ACWE) model developed by Chan and Vese \cite{chan2001active} resolves this problem by proposing an energy based upon 2 fitting terms (for 2-phase segmentation). The energy they sought to minimize is 
+The active contours without edges (ACWE) model developed by Chan and Vese \cite{chan2001active} resolves these issues by proposing an energy based upon 2 fitting terms (for 2-phase segmentation). The energy they sought to minimize is 
 \begin{align}
-\eacwe(\C, c_1, c_2, \lambda)
+\eacwe(\C, c_1, c_2; \lambda)
 = \textrm{ Length($\C$) } 
 + \lambda \int_{\Sigma} (c_1 - f )^2 \dx
-+ \lambda \int_{\Omega \setminus \Sigma} (c_2 - f )^2 \dx.
++ \lambda \int_{\Omega \setminus \Sigma} (c_2 - f )^2 \dx,
 \end{align}
+where $\Sigma \subset \Omega$ is the region enclosed by the contour $\C$.
 The last two terms of $\eacwe$ are the fitting terms we were referring to and within them two key quantities, $c_1, c_2 \in \mathbf{R}$, are introduced. They are best understood with a simple piecewise constant image with 2 homogeneous regions, see Figure \ref{fig:fitting}. Suppose the gray levels of the image are 0 and 1, with 1 being maximum intensity. Then with the contour as in Figure \ref{fig:gull}, $c_1 = 1$ and $c_2 = 0$ would minimize the fitting terms as each integral will evaluate to zero. However, with any other contour, eg. \Cref{fig:tiger} or \Cref{fig:mouse}, one or both fitting terms will be positive regardless of how one chooses $c_1$ and $c_2$. Consequently, minimizing $\eacwe$ should drive the contour towards the ``best fit'' without relying on image gradients.
 
 In the next sections we will derive an Euler-Lagrange equation to the ACWE model, provide a numerical discretization, and solve to steady state by gradient descent. Strengths and weaknesses of the model will be discussed.
@@ -39,9 +40,9 @@ In the next sections we will derive an Euler-Lagrange equation to the ACWE model
 
 
 \section{Euler-Lagrange equation for the ACWE model}
-To be clear, minimizing $\eacwe$ is very hard as there is $\C$ (or equivalently $\Sigma$), $c_1$, and $c_2$ to consider. Rather than simultaneous minimization wrt $\C$, $c_1$, and $c_2$, we will follow the clever alternating minimization scheme suggested in \cite{chan2001active}. The procedure will be to optimize first wrt $c_1$ and $c_2$ with $\C$ fixed, then with $c_1$ and $c_2$ determined, minimize wrt $\C$.
+To be clear, minimizing $\eacwe$ is very hard as there is $\C$ (or equivalently $\Sigma$), $c_1$, and $c_2$ to consider. Rather than simultaneous minimization w.r.t. $\C$, $c_1$, and $c_2$, we will follow the clever alternating minimization scheme suggested in \cite{chan2001active}. The procedure will be to optimize first w.r.t. $c_1$ and $c_2$ with $\C$ fixed, then with $c_1$ and $c_2$ determined, minimize w.r.t. $\C$.
 
-Fixing $\C$, it is then elementary calculus to determine $c_1$ and $c_2$: 
+First with fixed $\C$, it is then elementary calculus to determine the optimal values for $c_1$ and $c_2$: 
 \begin{align}
 0 = \pd{\eacwe}{c_1}  = 2\lambda \int_{\Sigma} (c_1 - f ) \dx
 &\implies 
@@ -53,7 +54,7 @@ c_1 = \frac{1}{\abs{\Sigma}} \int_{\Sigma} f \dx,
 c_2 = \frac{1}{\abs{\Omega\setminus\Sigma}} \int_{\Omega\setminus \Sigma} f \dx,
 \label{eq:c2}
 \end{align}
-where we used $\abs{\cdot}$ to denote the area of a set. Next to derive the Euler-Lagrange equation to $\eacwe$, we must first rewrite it in terms of a level set function to move the dependence of the fitting terms on $\Sigma$ directly into the integrand. The three terms forming $\eacwe$ can be expressed as 
+where we used $\abs{\cdot}$ to denote the area of a set. Next is the minimization of $\eacwe(\cdot, c_1, c_2; \lambda)$, i.e. $\min_{\Sigma \subset \Omega} \eacwe(\Sigma)$. Rewriting in terms of a level set function to transfer the dependence on $\Sigma$ directly into the integrand, we have 
 \begin{align}
 \textrm{Length}(\C) 
 = \textrm{Perimeter}(\Sigma) 
@@ -68,16 +69,16 @@ where we used $\abs{\cdot}$ to denote the area of a set. Next to derive the Eule
 &=
 \int_{\Omega} (c_2 - f(x))^2 (1 - H(\phi(x))) \dx
 \end{align}
-The trouble with differentiating the Heaviside function is handled by subsituting with a regularized version: $H_\varepsilon \in C^2$, and $H_\varepsilon \rightarrow H$ as $\varepsilon\rightarrow 0$ and denote $\delta_\varepsilon = H'_\varepsilon$. The regularized energy (which we will continue to call $\eacwe$ for convenience) is then 
+Looking ahead, to derive the Euler-Lagrange equation may require differentiating the Heaviside and the delta function. This technicality is averted by subsituting with a regularized version: $H_\varepsilon \in C^2$, and $H_\varepsilon \rightarrow H$ as $\varepsilon\rightarrow 0$ and denote $\delta_\varepsilon = H'_\varepsilon$. Thus the regularized energy (which we will continue to call $\eacwe$ for convenience) is then 
 \begin{align*}
 \eacwe(\phi) 
 &= \int_{\Omega } \abs{\nabla H_\varepsilon(\phi(x))} \dx 
-+ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) \, d\Omega 
-+ \lambda\int_{\Omega} (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx
++ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) 
++ (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx
 \\
 &= \int_{\Omega } \delta_\varepsilon(\phi(x)) \abs{\nabla \phi(x)} \dx 
-+ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) \, d\Omega 
-+ \lambda\int_{\Omega} (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx,
++ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) 
++ (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx,
 \end{align*}
 and its first variation
 \begin{align*}
@@ -99,7 +100,7 @@ and its first variation
 The gradient descent evolution is thus 
 \begin{align}
 \phi_t 
-= \delta_\epsilon(\phi) \left[ 
+= \delta_\varepsilon(\phi) \left[ 
 \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) - \lambda (c_1 - f)^2 + \lambda (c_2 - f)^2 
 \right]
 \label{eq:acwe_el}
@@ -108,6 +109,36 @@ with boundary condition $\delta_\varepsilon
 \frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal = 0$.
 
 
+\section{Numerical discretization}
+As was mentioned, the numerical scheme we apply to \eqref{eq:acwe_el} will largely be the same as the scheme detailed for the GAC model in \Cref{sec:gac_num_disc}. The difference are $\delta_\varepsilon(\phi^n_{ij})$ in place of $\abs{\nabla^0 \phi^n}$, $g_{ij} = 1$ for all $(i,j)$, and the inclusion of the new fitting terms.
 
+The fitting terms are straightforward to handle as they have no explicit $\phi$-dependence. Let $r(x) = [(c_1 - f(x))^2 - (c_2 - f(x))^2 ]$. Then at the beginning of each timestep, update $c_1$ and $c_2$ according to \eqref{eq:c1} and \eqref{eq:c2} and set
+\begin{align*}
+r_{ij}^n = \big[ (c_1^n - f_{ij})^2 - (c_2^n - f_{ij})^2 \big].
+\end{align*}
+The expression for $\delta_\varepsilon(\phi)$ follows straight from our choice of $H_\varepsilon(\phi)$, which we set as in \cite{chan2001active}:
+\begin{align*}
+H_\varepsilon(\xi)
+ = \frac{1}{2} 
+\left(1 + \frac{2}{\pi}\arctan
+\left(\frac{\xi}{\varepsilon} 
+\right) \right)
+\implies 
+\delta_\varepsilon(\xi)  
+=  \frac{1}{\pi}\frac{\varepsilon}{\varepsilon^2  + \xi^2}.
+\end{align*}
+Very important to note that this choice of $H_\varepsilon$ is ``global'', and it relates to the convexity of $\eacwe$. The authors argue against a compactly supported regularization of $H$, saying that because the energy is non-convex and may admit local minima, a global $H_\varepsilon$ is more likely to compute a global minimizer and allows the model to automatically detect interior contours (both of which they observed in practice). We also set $\varepsilon = h$ as recommended, i.e. use $\delta_h(\phi_{ij})$.
+
+All together, this gives us the numerical scheme
+\begin{align*}
+\phi^{n+1}_{ij} 
+= \frac{1}{a_0} 
+\left( \phi^n_{ij} + \Delta t \delta_h(\phi_{ij}^n)
+\left( a_1 \phi^n_{i+1,j} + a_2 \phi^{n+1}_{i-1,j} + a_3 \phi^{n}_{i,j+1} + a_4 \phi^{n+1}_{i,j-1} 
+- \lambda r_{ij}^n
+\right)
+\right),
+\end{align*}
+with $a_1, a_2, a_3, a_4$  as given in \Cref{sec:gac_num_disc} but with $g_{ij} = 1$, and $a_0 = 1 + \Delta t \delta_h(\phi_{ij}^n)(a_1 + a_2 + a_3 + a_4)$.
 
 
