@@ -133,7 +133,7 @@ The Gauss-Seidel iterations would be (if working through $(i,j)$ in the usual or
 \right)
 \right).
 \end{align*}
-One final note with regards to this numerical discretization. It is suggested to alternate the discretization of the divergence term, eg. applying $D^+_x$ on the outside and $D^-_x$ inside, and with various combinations with $D^+_y$, $D^-_y$ as well. However we were unable to observe any difference visually.
+One final note with regards to this numerical discretization. It is suggested to alternate the discretization of the divergence term, eg. applying $D^+_x$ on the outside and $D^-_x$ inside, and with various combinations with $D^+_y$, $D^-_y$ as well. However in testing we were unable to observe any difference visually.
 
 
 \section{Examples} 
@@ -141,3 +141,13 @@ One final note with regards to this numerical discretization. It is suggested to
 unable to capture interior contours automatically
 
 highly sensitive to initial contour
+
+slow convergence. Authors suggest modifying the GAC model
+\begin{align*}
+\phi_t = 
+\abs{\nabla \phi} \Div\left( g \frac{\nabla \phi}{\abs{\nabla \phi}} \right) 
++ cg \abs{\nabla \phi} 
+= \left( g ( c + \kappa) + \nabla g \cdot \frac{\nabla \phi}{\abs{\nabla \phi}} \right) \abs{\nabla \phi}
+\end{align*}
+which is adding a constant velocity in the normal direction. For $c>0$, this will cause the contour to expand, and if $c<0$, contract.
+
