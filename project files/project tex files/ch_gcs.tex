@@ -1,10 +1,10 @@
 \chapter{Globally Convex Segmentation}
 \label{ch:gcs}
-Numerical experiments in the two models, GAC and ACWE, show that there is certainly room for improvement from the modelling perspective. Of particular concern are the models knack for finding and getting stuck at local minima (by design, in case of the GAC model), and therefore the solution attained is dependent on the initial contour. These issues are address by Chan, Esedo\={g}lu, and Nikolova \cite{chan2006algorithms}, and their ideas further refined by Bresson et al. \cite{bresson2007fast}, in what they referred to as the convexification of the ACWE model and the unification of two models we have considered.
+Our numerical examples with the two models, GAC and ACWE, show still plenty of room for improvement from the modelling perspective. Of particular concern is this knack for finding and getting stuck at local minima (by design, in case of the GAC model), and therefore the solution we get is dependent on the initial contour we set. These issues are address by Chan, Esedo\={g}lu, and Nikolova \cite{chan2006algorithms}, and their ideas further refined by Bresson et al. \cite{bresson2007fast}, in what they referred to as the convexification of the ACWE model and the unification of two models we have considered.
 
-Before going in depth, we should explain that in this chapter our viewpoint on the segmentation problem shifts somewhat. In the previous models, the viewpoint was mainly on an active contours and its evolution. However in the GCS model, the viewpoint is centred about indicator functions (of sets). Keep in mind that for 2-phase segmentation, any subset $\Sigma \subset \Omega$, and equivalently the corresponding indicator function $\ind_\Sigma$, defines a segmentation of the image domain. In what follows, the goal will arriving at an indicator function $u(x) = \ind_\Sigma(x)$, and the piecewise constant solution $\widetilde u(x) = c_1 \ind_\Sigma(x) + c_2 (1 - \ind_\Sigma(x))$. In other words, the problem may instead be framed as optimizating over functions that take only two values to find the best approximation to a given image $f$.
+In this chapter our viewpoint on the segmentation problem shifts somewhat. With the two previous models, the expression and evolution of the active contour, in the form of a level set function, was at the forefront. When we turn to the globally convex segmentation (GCS) model, the viewpoint shifts to subsets and indicator functions of these subsets. Keep in mind that for 2-phase segmentation any subset $\Sigma \subset \Omega$, and equivalently the corresponding indicator function $\ind_\Sigma$, defines a segmentation of the image domain. Thus the objective is to determine an indicator function $u(x) = \ind_\Sigma(x)$, and a piecewise constant solution $\widetilde u(x) = c_1 \ind_\Sigma(x) + c_2 (1 - \ind_\Sigma(x))$. 
 
-But first it is important to understand the nature of the non-convexity in the ACWE model. Restating the optimization problem in terms of indicator functions, we have 
+First we address the non-convexity in the ACWE model. Restating the optimization problem in terms of indicator functions, we have 
 \begin{align}
 \min_{\substack{\Sigma\subset\Omega \\ 
 		u(x) = \ind_\Sigma(x)}} 
@@ -14,12 +14,10 @@ But first it is important to understand the nature of the non-convexity in the A
 \right\}.
 \label{eq:eacwe2}
 \end{align}
-Observe that the function set we are optimizing over is not convex. For instance suppose $\Sigma_1, \Sigma_2 \subset \Omega$, $\Sigma_1 \cap \Sigma_2 = \emptyset$, $\Omega \setminus (\Sigma_1 \cup \Sigma_2) \neq \emptyset$ and set $u_1 = \ind_{\Sigma_1}$ and $u_2 = \ind_{\Sigma_2}$. Then any convex combination $w = ku_1 + (1-k)u_2$, $k \in (0,1)$, would be a function that takes on three values. 
-
-In the next section are two key theorems which will allow that constraint to be relaxed, i.e. allow $u$ to take on the continuum of values between 0 and 1, and lead to an equivalent but convex minimization problem.
+Observe that the function set we are optimizing over is not convex. For instance suppose $\Sigma_1, \Sigma_2 \subset \Omega$, $\Sigma_1 \cap \Sigma_2 = \emptyset$, $\Omega \setminus (\Sigma_1 \cup \Sigma_2) \neq \emptyset$ and set $u_1 = \ind_{\Sigma_1}$ and $u_2 = \ind_{\Sigma_2}$. Then any convex combination $w = ku_1 + (1-k)u_2$, $k \in (0,1)$, would be a function that takes on three values. Addressing the issue of convexity are two key theorems presented in the next section which relaxes the restriction on our function space, allows $u$ to take on the continuum of values between 0 and 1, and leads to an equivalent but convex minimization problem.
 
 \section{A unified GAC \& ACWE convex segmentation model}
-We first start the key observation that in choosing a non-compactly support $\delta_\epsilon$ in the gradient descent evolution \eqref{eq:acwe_el}, the following will have the same steady state solutions: 
+The key observation made by Chan et al. \cite{chan2006algorithms} is that in choosing a non-compactly support $H_\varepsilon$ for the gradient descent evolution \eqref{eq:acwe_el}, the following gradient flow will have the same steady state solutions: 
 \begin{align*}
 \phi_t = \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) 
 - \lambda (c_1 - f)^2 + \lambda (c_2 - f)^2 .
@@ -48,7 +46,7 @@ which gets us to the first of two key theorems from \cite{chan2006algorithms}.
 	\label{thm:1}
 \end{thm}
 The theorem above links the two energies, $\eacwe$ and $\widetilde E_\textrm{ACWE}$,
-and guarantees that any global minimum of \eqref{eq:mod_acwe} is only a thresholding step away from a global minimum of the ACWE model. The next theorem is but one way to tackle \eqref{eq:thm1}.
+and guarantees that any global minimum of \eqref{eq:thm1} is only a thresholding step away from a global minimum of the ACWE model. The next theorem is but one way to tackle the minimization problem \eqref{eq:thm1}.
 
 \begin{thm}
 	Let $r(x) \in L^\infty(\Omega)$. Then the convex, constrained minimization problem
@@ -62,32 +60,40 @@ and guarantees that any global minimum of \eqref{eq:mod_acwe} is only a threshol
 	where $\nu(\xi) = \max\{ 0 , 2\abs{\xi - \frac{1}{2} } - 1\}$, provided that $\alpha > \frac{\lambda}{2}\norm{r(x)}_{L^\infty(\Omega)}$.
 	\label{thm:2}
 \end{thm}
-The term $\alpha\nu(u)$ is an exact penalty term \cite{hiriart1993convexI,hiriart1993convexII}. The advantage of this new unconstrained formulation is that it is quite straightforward to derive the Euler-Lagrange equation and solve by gradient descent. But before doing so, we will add one more modification to give a unified globally convex segmentation (GCS) model.
+The addition of the exact penalty term \cite{hiriart1993convexI,hiriart1993convexII} grants us an unconstrained formulation. Deriving the Euler-Lagrange equation is straightforward in this form. But before doing so, we add one more modification to give a unified globally convex segmentation (GCS) model.
 
-Per Bresson et al. \cite{bresson2007fast}, building on the work of \cite{chan2006algorithms}, they propose minimization of the energy 
+Per Bresson et al. \cite{bresson2007fast}, building on the work of \cite{chan2006algorithms}, they propose the minimization 
 \begin{align}
-\egcs(u, c_1, c_2; \lambda) = 
+\min_{0\leq u \leq 1} \left\{
+\egcs(u, c_1, c_2; \lambda) 
+= 
 \int_{\Omega} g(x)  \abs{\nabla u} \dx 
-+ \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] u(x) \dx,
++ \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] u(x) \dx
+\right\},
 \end{align}
-where $g$ is an edge indicator function as in \Cref{ch:gac}. Furthermore, if $u$ is an indicator function, then
+Note the similarity to \eqref{eq:thm1}. The only change is the added edge indicator function $g(x)$ in the first term. Note also the close relationship to $\egac$ from \Cref{ch:gac}. If $u$ is an indicator function, then 
 \begin{align*}
 \egcs(\ind_\Sigma(x), c_1, c_2; \lambda) 
 &= \int_{\Omega} g(x)  \abs{\nabla \ind_\Sigma(x)} \dx 
 + \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] \ind_\Sigma(x) \dx
 \\
-&= \egac(\partial \Sigma) +  \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] \ind_\Sigma(x) \dx
+&= \egac(\partial \Sigma) +  \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] \ind_\Sigma(x) \dx,
 \end{align*}
-reduces to the familiar GAC energy but now subject to an ACWE-type fitting energy constraint. Finally, also note that $\egcs$ satisfies statements same as those in Theorem \ref{thm:1} and \ref{thm:2}, but with $\int g\abs{\nabla u}$ in place of $\int \abs{\nabla u}$.
+reduces to the familiar GAC energy but now subject to an ACWE-type fitting energy constraint. Finally, we point out that $\egcs$ satisfies statements same as those in Theorem \ref{thm:1} and \ref{thm:2}, but with $\int g\abs{\nabla u}$ in place of $\int \abs{\nabla u}$.
 
 The next section will not be just one, but two numerical algorithms for image segmentation under the GCS model. In addition to the usual Euler-Lagrange equation and gradient descent, we will also discuss application of the Split Bregman method \cite{goldstein2010geometric,goldstein2009split} to this segmentation model.
 
 \section{Minimization of the GCS model: gradient descent and the Split Bregman}
+For the following sections, let 
+\begin{align*}
+r(x, c_1, c_2) = (c_1 - f)^2 - (c_2 - f)^2.
+\end{align*}
+
 \subsection{Euler-Lagrange for the GCS model}
 For this subsection, we are considering the unconstrained minimization problem 
 \begin{align*}
 \min_u \underbrace{\int_{\Omega } g\abs{\nabla u} \dx 
-+ \int_{\Omega} \lambda \overbrace{\big[ (c_1 - f)^2 - (c_2 - f)^2 \big]}^{=r(x)} u + \alpha \nu(u) \dx }_{=\widetilde E_{\textrm{GCS}}(u)}
++ \int_{\Omega} \lambda r u + \alpha \nu(u) \dx }_{=\widetilde E_{\textrm{GCS}}(u)},
 \end{align*}
 ($\egcs$ with an exact penalty term, see Theorem \ref{thm:2}).
 Fixing $c_1, c_2$ and $\lambda$, we have
@@ -101,11 +107,11 @@ Fixing $c_1, c_2$ and $\lambda$, we have
 \end{align*}
 which gives us the descent equation 
 \begin{align*}
-u_t = \Div\left( g(x)  \frac{\nabla u}{\abs{\nabla u}} \right) - \lambda\big[ (c_1 - f)^2 - (c_2 - f)^2 \big]  - \alpha \nu'(u)
+u_t = \Div\left( g(x)  \frac{\nabla u}{\abs{\nabla u}} \right) - \lambda r(x,c_1,c_2)- \alpha \nu'(u)
 \end{align*}
 and boundary condition $g\frac{\nabla u}{\abs{\nabla u}} \cdot \normal = 0$. 
 
-Those familiar with exact penalty functions will note that there is a techical issue with the descent equation. As defined, $\nu(\xi)$ has two points of non-differentiability at $\xi = 0$ and $\xi = 1$. It will be necessary to substitute with a smooth penalty function, $\nu_\varepsilon(\xi)$. In our numerical examples we will be using a smoothed penalty function similar to one analyzed by Pinar and Zenios \cite{pinar1994smoothing}.
+Those familiar with exact penalty functions will note a small techical issue with the descent equation. As defined in Theorem \ref{thm:2}, $\nu(\xi)$ has two points of non-differentiability at $\xi = 0$ and $\xi = 1$. It will be necessary to substitute with a smooth penalty function, $\nu_\varepsilon(\xi)$. In our numerical examples a smoothed penalty function similar to one analyzed by Pinar and Zenios \cite{pinar1994smoothing} is used.
 
 
 
