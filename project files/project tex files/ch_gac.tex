@@ -81,6 +81,7 @@ g(  \abs{\nabla I } ) \frac{\nabla \phi}{\abs{\nabla \phi}}
 \end{align}
 
 \section{Numerical discretization}
+\label{sec:gac_num_disc}
 To discretize \eqref{eq:gac_ls}, we will use the semi-implicit Gauss-Seidel  numerical scheme proposed by Aubert and Vese \cite{aubert1997variational} and used to good effect by Chan and Vese with their ACWE model \cite{chan2001active} rather than using explicit forward Euler with second order centred differences as originally suggested\footnote{Although to be fair, it was suggested for ease of implementation as a proof of concept. For us, the same semi-implicit numerical scheme can and will be used again in \Cref{ch:acwe,ch:gcs} so it makes sense to give a complete presentation once and be able to reuse essentially the same code three times. } in \cite{caselles1997geodesic}.
 
 Define the discrete differential operators: $D_x^+ u_{ij} = (u_{i+1,j} - u_{ij})/h$, $D^0_x = (u_{i+1,j} - u_{i-1,j})/(2h)$,
@@ -97,39 +98,48 @@ D^-_x \left( \frac{g_{ij}D^+_x \phi_{ij}^{n+1}}{\sqrt{ (D^+_x \phi^n_{ij})^2 + (
 \right)
 \\
 &= 
-\frac{\abs{\nabla^0 \phi^n} g_{ij}/h^2 }{\sqrt{ \frac{1}{h^2}(\phi^n_{i+1j} -\phi^n_{ij} )^2 + \frac{1}{4h^2} (\phi^n_{i,j+1} - \phi^n_{i,j-1})^2 + \varepsilon^2}}
+\abs{\nabla^0 \phi^n}\frac{ g_{ij}/h^2 }{\sqrt{ \frac{1}{h^2}(\phi^n_{i+1j} -\phi^n_{ij} )^2 + \frac{1}{4h^2} (\phi^n_{i,j+1} - \phi^n_{i,j-1})^2 + \varepsilon^2}}
 (\phi^{n+1}_{i+1,j} - \phi^{n+1}_{ij})
 \\
-&\qquad-\frac{\abs{\nabla^0 \phi^n} g_{i-1,j}/h^2 }{\sqrt{ \frac{1}{h^2}(\phi^n_{ij} -\phi^n_{i-1,j} )^2 + \frac{1}{4h^2} (\phi^n_{i-1,j+1} - \phi^n_{i-1,j-1})^2 + \varepsilon^2}}
+&\quad-\abs{\nabla^0 \phi^n}\frac{ g_{i-1,j}/h^2 }{\sqrt{ \frac{1}{h^2}(\phi^n_{ij} -\phi^n_{i-1,j} )^2 + \frac{1}{4h^2} (\phi^n_{i-1,j+1} - \phi^n_{i-1,j-1})^2 + \varepsilon^2}}
 (\phi^{n+1}_{ij} - \phi^{n+1}_{i-1,j}) 
 \\
-&\qquad+\frac{\abs{\nabla^0 \phi^n} g_{ij}/h^2 }{\sqrt{ \frac{1}{4h^2}(\phi^n_{i+1,j} -\phi^n_{i-1,j} )^2 + \frac{1}{h^2} (\phi^n_{i,j+1} - \phi^n_{ij})^2 + \varepsilon^2}}
+&\quad+\abs{\nabla^0 \phi^n}\frac{ g_{ij}/h^2 }{\sqrt{ \frac{1}{4h^2}(\phi^n_{i+1,j} -\phi^n_{i-1,j} )^2 + \frac{1}{h^2} (\phi^n_{i,j+1} - \phi^n_{ij})^2 + \varepsilon^2}}
 (\phi^{n+1}_{i,j+1} - \phi^{n+1}_{ij}) 
 \\
-&\qquad-\frac{\abs{\nabla^0 \phi^n} g_{i,j-1}/h^2 }{\sqrt{ \frac{1}{4h^2}(\phi^n_{i+1,j-1} -\phi^n_{i-1,j-1} )^2 + \frac{1}{h^2} (\phi^n_{ij} - \phi^n_{i,j-1})^2 + \varepsilon^2}}
+&\quad-\abs{\nabla^0 \phi^n}\frac{ g_{i,j-1}/h^2 }{\sqrt{ \frac{1}{4h^2}(\phi^n_{i+1,j-1} -\phi^n_{i-1,j-1} )^2 + \frac{1}{h^2} (\phi^n_{ij} - \phi^n_{i,j-1})^2 + \varepsilon^2}}
 (\phi^{n+1}_{ij} - \phi^{n+1}_{i,j-1}) 
 \\
-&\eqqcolon c_1(\phi^{n+1}_{i+1,j} - \phi^{n+1}_{ij})
-- c_2(\phi^{n+1}_{ij} - \phi^{n+1}_{i-1,j}) 
-+ c_3(\phi^{n+1}_{i,j+1} - \phi^{n+1}_{ij}) 
-- (\phi^{n+1}_{ij} - \phi^{n+1}_{i,j-1}) 
+&\eqqcolon \abs{\nabla^0 \phi^n} \big[ a_1(\phi^{n+1}_{i+1,j} - \phi^{n+1}_{ij})
+- a_2(\phi^{n+1}_{ij} - \phi^{n+1}_{i-1,j}) 
++ a_3(\phi^{n+1}_{i,j+1} - \phi^{n+1}_{ij}) 
+- a_4(\phi^{n+1}_{ij} - \phi^{n+1}_{i,j-1})
+\big]
 \\
-&= c_1\phi^{n+1}_{i+1,j} + c_2\phi^{n+1}_{i-1,j} + c_3\phi^{n+1}_{i,j+1} + c_4\phi^{n+1}_{i,j-1}
-- (c_1 + c_2 + c_3 + c_4) \phi^{n+1}_{ij}.
+&= \abs{\nabla^0 \phi^n} 
+\big[ a_1\phi^{n+1}_{i+1,j} 
++ a_2\phi^{n+1}_{i-1,j} 
++ a_3\phi^{n+1}_{i,j+1} 
++ a_4\phi^{n+1}_{i,j-1}
+- (a_1 + a_2 + a_3 + a_4) \phi^{n+1}_{ij}
+\big].
 \end{align*}
 Hence 
 \begin{align*}
 \big[ 
-\underbrace{1 + \Delta t (c_1 + c_2 + c_3 + c_4)
-\big]}_{\eqqcolon c_0} \phi^{n+1}_{ij} 
-= \phi^n_{ij} + \Delta t (c_1\phi^{n+1}_{i+1,j} + c_2\phi^{n+1}_{i-1,j} + c_3\phi^{n+1}_{i,j+1} + c_4\phi^{n+1}_{i,j-1}).
+\underbrace{1 + \Delta t\abs{\nabla^0 \phi^n} (a_1 + a_2 + a_3 + a_4) \big]
+}_{\eqqcolon a_0} \phi^{n+1}_{ij} 
+= \phi^n_{ij} + \Delta t\abs{\nabla^0 \phi^n} (a_1\phi^{n+1}_{i+1,j} 
++ a_2\phi^{n+1}_{i-1,j} 
++ a_3\phi^{n+1}_{i,j+1} 
++ a_4\phi^{n+1}_{i,j-1}).
 \end{align*}
 The Gauss-Seidel iterations would be (if working through $(i,j)$ in the usual order)
 \begin{align*}
 \phi^{n+1}_{ij} 
-= \frac{1}{c_0} 
-\left( \phi^n_{ij} + \Delta t 
-\left( c_1 \phi^n_{i+1,j} + c_2 \phi^{n+1}_{i-1,j} + c_3 \phi^{n}_{i,j+1} + c_4 \phi^{n+1}_{i,j-1}
+= \frac{1}{a_0} 
+\left( \phi^n_{ij} + \Delta t \abs{\nabla^0 \phi^n}
+\left( a_1 \phi^n_{i+1,j} + a_2 \phi^{n+1}_{i-1,j} + a_3 \phi^{n}_{i,j+1} + a_4 \phi^{n+1}_{i,j-1}
 \right)
 \right).
 \end{align*}
