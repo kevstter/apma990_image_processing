@@ -57,7 +57,7 @@ and guarantees that any global minimum of \eqref{eq:thm1} is only a thresholding
 	\begin{align*}
 	\min_u \int_{\Omega} \abs{\nabla u} \dx + \lambda \int_{\Omega} r(x) u + \alpha \nu(u) \dx 
 	\end{align*}
-	where $\nu(\xi) = \max\{ 0 , 2\abs{\xi - \frac{1}{2} } - 1\}$, provided that $\alpha > \frac{\lambda}{2}\norm{r(x)}_{L^\infty(\Omega)}$.
+	where $\nu(z) = \max\{ 0 , 2\abs{z - \frac{1}{2} } - 1\}$, provided that $\alpha > \frac{\lambda}{2}\norm{r(x)}_{L^\infty(\Omega)}$.
 	\label{thm:2}
 \end{thm}
 The addition of the exact penalty term \cite{hiriart1993convexI,hiriart1993convexII} grants us an unconstrained formulation. Deriving the Euler-Lagrange equation is straightforward in this form. But before doing so, we add one more modification to give a unified globally convex segmentation (GCS) model.
@@ -106,13 +106,40 @@ Fixing $c_1, c_2$ and $\lambda$, we have
 &= \int_{\Gamma} h g \frac{\nabla u}{\abs{\nabla u}} \cdot \normal  \, d \Gamma - \int_{\Omega } \Div\left( g \frac{\nabla u}{\abs{\nabla u}} \right) - \lambda r - \alpha \nu'(u) \dx ,
 \end{align*}
 which gives us the descent equation 
-\begin{align*}
+\begin{align}
+\label{eq:gcs_el}
 u_t = \Div\left( g(x)  \frac{\nabla u}{\abs{\nabla u}} \right) - \lambda r(x,c_1,c_2)- \alpha \nu'(u)
-\end{align*}
+\end{align}
 and boundary condition $g\frac{\nabla u}{\abs{\nabla u}} \cdot \normal = 0$. 
 
-Those familiar with exact penalty functions will note a small techical issue with the descent equation. As defined in Theorem \ref{thm:2}, $\nu(\xi)$ has two points of non-differentiability at $\xi = 0$ and $\xi = 1$. It will be necessary to substitute with a smooth penalty function, $\nu_\varepsilon(\xi)$. In our numerical examples a smoothed penalty function similar to one analyzed by Pinar and Zenios \cite{pinar1994smoothing} is used.
+Those familiar with exact penalty functions will note a small techical issue with the descent equation. As defined in Theorem \ref{thm:2}, $\nu(z)$ has two points of non-differentiability at $z = 0$ and $z = 1$. It will be necessary to substitute with a smooth penalty function, $\nu_\varepsilon(z)$. In our numerical examples, we use
+\begin{align*}
+\nu_\varepsilon(z) = \begin{cases}
+-2z - \varepsilon/2, & z < -\frac{\varepsilon }{2}
+\\
+\frac{2}{\varepsilon} z^2, &-\frac{\varepsilon}{2} \leq z < 0
+\\
+0, & 0\leq z \leq 1
+\\
+\frac{2}{\varepsilon}(z-1)^2, & 1 < x \leq 1 + \frac{\varepsilon }{2}
+\\
+2(z - 1) - \frac{\varepsilon }{2}, & z > 1+\frac{\varepsilon }{2}.
+\end{cases}
+\end{align*}
+This choice is similar to one analyzed by Pinar and Zenios \cite{pinar1994smoothing}.
 
+The numerical discretization of \eqref{eq:gcs_el} is almost a carbon copy of our work in \Cref{sec:gac_num_disc,sec:3.2}. The Gauss-Seidel iterations are (if working through $(i,j)$ in the usual order)
+\begin{align*}
+u^{n+1}_{ij} 
+= \frac{1}{a_0} 
+\left( u^n_{ij} + \Delta t 
+\left( a_1 u^n_{i+1,j} + a_2 u^{n+1}_{i-1,j} + a_3 u^{n}_{i,j+1} + a_4 u^{n+1}_{i,j-1}
+- \lambda r_{ij}^n
+- \alpha \nu'_\varepsilon( u^n_{ij} )
+\right)
+\right),
+\end{align*}
+with $a_1,a_2,a_3,a_4$ as given in \Cref{sec:gac_num_disc} and $a_0 = 1 + \Delta t(a_1 + a_2 + a_3 + a_4)$. Perhaps more important to discuss is the role of the thresholding step from Theorem \ref{thm:1}. Recall that we are using the alternating minimization scheme to first set $c_1$ and $c_2$, then minimizing $\egac(\cdot, c_1, c_2)$ to determine $u$. In practice, this means we set $\Sigma = \{x \mid u(x) \geq 0.5\}$ whenever it is necessary to update $c_1$ and $c_2$, and when presenting the steady state solution and the contour $\C$.
 
 
 \subsection{The Split Bregman method}
