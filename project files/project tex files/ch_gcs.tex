@@ -70,6 +70,7 @@ Per Bresson et al. \cite{bresson2007fast}, building on the work of \cite{chan200
 \int_{\Omega} g(x)  \abs{\nabla u} \dx 
 + \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] u(x) \dx
 \right\},
+\label{eq:min_gcs}
 \end{align}
 Note the similarity to \eqref{eq:thm1}. The only change is the added edge indicator function $g(x)$ in the first term. Note also the close relationship to $\egac$ from \Cref{ch:gac}. If $u$ is an indicator function, then 
 \begin{align*}
@@ -89,7 +90,7 @@ For the following sections, let
 r(x, c_1, c_2) = (c_1 - f)^2 - (c_2 - f)^2.
 \end{align*}
 
-\subsection{Euler-Lagrange for the GCS model}
+\subsection{Euler-Lagrange and numerical discretization for the GCS model}
 For this subsection, we are considering the unconstrained minimization problem 
 \begin{align*}
 \min_u \underbrace{\int_{\Omega } g\abs{\nabla u} \dx 
@@ -142,34 +143,33 @@ u^{n+1}_{ij}
 with $a_1,a_2,a_3,a_4$ as given in \Cref{sec:gac_num_disc} and $a_0 = 1 + \Delta t(a_1 + a_2 + a_3 + a_4)$. Perhaps more important to discuss is the role of the thresholding step from Theorem \ref{thm:1}. Recall that we are using the alternating minimization scheme to first set $c_1$ and $c_2$, then minimizing $\egac(\cdot, c_1, c_2)$ to determine $u$. In practice, this means we set $\Sigma = \{x \mid u(x) \geq 0.5\}$ whenever it is necessary to update $c_1$ and $c_2$, and when presenting the steady state solution and the contour $\C$.
 
 
-\subsection{The Split Bregman method}
-In \cite{goldstein2010geometric}, Goldstein, Bresson and Osher applied the Split Bregman method \cite{goldstein2009split} to the GCS image segmentation model with good results. An advantage of using the Split Bregman method is that we are able to solve the minimization problem 
-\begin{align}
-\min_{0 \leq u \leq 1} \left\{ \egcs  
-= \int_{\Omega } g\abs{\nabla u} \dx 
-+ \lambda \int_{\Omega} \big[ (c_1 - f)^2 - (c_2 - f)^2\big] u \dx
-\right\}
-\label{eq:egcs1}
-\end{align}
-without the need of an exact penalty term or any added regularization of the TV-norm. We will compare and contrast this alternative to the earlier gradient descent approach. 
+\subsection{The Split Bregman method applied to the GCS model}
+From the beginning we have said that minimization by way of the Euler-Lagrange equation is an extremely general technique and have now seen it applied to two non-convex and one convex segmentation model. But with a convex model, it would be negligent to not consider efficient solvers from convex optimization. 
 
-To derive the Split Bregman formulation, we'll first restate \eqref{eq:egcs1} in discrete form, define the auxiliary variable $d = (d^x, d^y) = (u_x, u_y) = \nabla u$ and introduce a quadratic penalty function to weakly enforce this equality. This gets us 
+In \cite{goldstein2010geometric}, Goldstein, Bresson and Osher applied the Split Bregman method \cite{goldstein2009split} to the GCS image segmentation model with good results. One advantage of using the Split Bregman method is that we are able to solve the minimization problem \eqref{eq:min_gcs} without the need of the exact penalty function  or any added regularization required due to division by $\abs{\nabla u}$. We will compare and contrast this alternative to the earlier gradient descent approach. 
+
+To derive the Split Bregman formulation, we start with expressing \eqref{eq:min_gcs} in discrete form: 
+\begin{align*}
+\min_{0\leq u \leq 1} \norm{ \nabla u }_g + \lambda \ip{r}{u},
+\end{align*}
+where $\norm{ \nabla u }_1 = \norm{ g \nabla u}_1$. Next, 
+define an auxiliary variable $d = (d^x, d^y) = (u_x, u_y) = \nabla u$ and introduce a quadratic penalty function to weakly enforce this equality to get
 \begin{align*}
 \min_{0\leq u \leq 1, d} 
  \norm{d }_g + \lambda  \langle r, u \rangle
-+ \frac{\theta}{2} \norm{ d - \nabla u }_2^2,
-\end{align*}
-where $\norm{d}_g = \norm{g \nabla u}_1$. For problems such as ours \footnote{For more details, one can refer to the appendix, and \cite{goldstein2009split,goldstein2010geometric}}, the Bregman iteration simplifies to the 2-step procedure 
++ \frac{\theta}{2} \norm{ d - \nabla u }_2^2.
+\end{align*} 
+The Bregman iteration, for this particular problem, is the 2-step procedure (see \cite[Theorem 2.2.]{goldstein2009split})
 \begin{align}
 (u^{k+1}, d^{k+1}) 
-&= \argmin_{0\leq u \leq 1, d}  \norm{d}_g + \lambda \langle r, u \rangle + \frac{\theta}{2} \norm{d - \nabla u - b^k }^2_2 
+&= \argmin_{0\leq u \leq 1, d}  \norm{d}_g + \lambda\ip{r}{u} + \frac{\theta}{2} \norm{d - \nabla u - b^k }^2_2 
 \\
-b^{k+1} &= b^k - (d^k - \nabla u^k) .
+b^{k+1} &= b^k - (d^{k+1} - \nabla u^{k+1}) .
 \label{eq:sbbij}
 \end{align} 
-The Split Bregman then breaks up the first step into 2 substeps that may be iterated until convergence, effectively decoupling $u$ and $d$: 
+The Split Bregman then ``splits'' the first step into 2 substeps that may be iterated until convergence, effectively decoupling $u$ and $d$: 
 \begin{align}
-u^{k+1} &= \argmin_{0\leq u \leq 1} \lambda \langle r, u \rangle
+u^{k+1} &= \argmin_{0\leq u \leq 1} \lambda \ip{r}{u}
 + \frac{\theta}{2} \norm{d^k - \nabla u - b^k }^2_2,
 \label{eq:splitu}
 \\
@@ -179,13 +179,13 @@ d^{k+1}
 \end{align}
 Each of the substeps can be solved efficiently. We begin by tackling the solution to \eqref{eq:splitd}.
 
-To begin, let's clarify precisely what the vector norm $\norm{\cdot }_g$ is as there is more than one choice. We will use the one referred to as isotropic TV in \cite{goldstein2009split},
+To begin, let us specify precisely the meaning of the vector norm $\norm{\cdot }_1$. The variant we give here is sometimes referred to as the isotropic TV-norm,
 \begin{align*}
-\norm{ d }_g 
-= \sum^N_{i,j = 1} g_{ij} \norm{d_{ij}}_2 
-= \sum^{N}_{i,j = 1} g_{ij} \sqrt{ (d^x_{ij} )^2 + (d^y_{ij} )^2 }
+\norm{ d }_1
+= \sum^N_{i,j = 1}  \norm{d_{ij}}_2 
+= \sum^{N}_{i,j = 1} \sqrt{ (d^x_{ij} )^2 + (d^y_{ij} )^2 },
 \end{align*}
-in which case \eqref{eq:splitd} is equivalently 
+with which we can express \eqref{eq:splitd} as
 \begin{align*}
 \sum^{N}_{i,j = 1} g_{ij} \sqrt{ (d^x_{ij} )^2 + (d^y_{ij} )^2 }
 + \frac{\theta}{2} \sum^N_{i,j=1} \big[ (d^x_{ij} - \nabla_x u^{k+1}_{ij} - (b^x_{ij})^k)^2 
@@ -220,32 +220,30 @@ which combines as
 \implies 
 \norm{d_{ij}}_2 = \norm{\nabla u^{k+1}_{ij} + b^k_{ij} }_2 - \frac{g_{ij}}{\theta},
 \end{align*}
-(if solution exists), so
+(if a solution exists), so
 \begin{align*}
 d_{ij}^x 
 = \frac{ \nabla_x u^{k+1}_{ij} + (b^x_{ij})^k }{ \norm{\nabla u^{k+1}_{ij} + b^k_{ij} }_2} \left( \norm{\nabla u^{k+1}_{ij} + b^k_{ij} }_2 - \frac{g_{ij}}{\theta} \right), 
 \end{align*}
-and similarly for $d^y_{ij}$. Otherwise, there is one other critical point giving the minimum at $d = 0$; the full solution is typically presented as 
+and similarly for $d^y_{ij}$. Otherwise, there is one other critical point giving the minimum at $d = 0$. The full solution is typically presented as 
 \begin{align}
-(d^x)^{k+1} 
-= \max\left( \norm{ \nabla u^{k+1} + b^k}_2 - \frac{g}{\theta}, 0 \right) \frac{ \nabla_x u^{k+1} + (b^x)^k}{ \norm{ \nabla u^{k+1} + b^k}_2}
+d^{k+1}
+= \max\left( \norm{ \nabla u^{k+1} + b^k}_2 - \frac{g}{\theta}, 0 \right) \frac{ \nabla u^{k+1} + b^k}{ \norm{ \nabla u^{k+1} + b^k}_2}.
 \label{eq:sbdij}
 \end{align}
-and likewise for $(d^y)^{k+1}$.
 
-The solution to \eqref{eq:splitu} can be found by first differentiating to get $0 = \lambda  +\theta  \nabla \cdot ( d^k - \nabla u - b^k)$ which leads to $\Delta u = \frac{\lambda}{\theta} r + \nabla \cdot (d^k - b^k)$. As the energy is quadratic in $u_{ij}$, either the optimal value is given by this PDE, or if it were outside the interval $[0,1]$, then must take either $0$ or $1$, whichever is nearer the unconstrained minimizer. For example, with centred differencing of the Laplacian, we have 
+The solution to \eqref{eq:splitu} can be found by first differentiating to get $0 = \lambda  +\theta  \nabla \cdot ( d^k - \nabla u - b^k) \iff \Delta u = \frac{\lambda}{\theta} r + \nabla \cdot (d^k - b^k)$. As the energy \eqref{eq:splitu} is quadratic in $u_{ij}$, either the optimal value is this unconstrained minimizer, $\widetilde u_{ij}$, or if $\widetilde{u}_{ij} \notin [0,1]$, the optimal value we seek is $0$ or $1$, whichever is nearer. For instance with centred differencing of the Laplacian, we have 
 \begin{align}
 \widetilde u_{ij} = \frac{1}{4}\left(
 u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1} 
 - \frac{\lambda}{\theta} r_{ij}
-- \nabla_x ((d^x_{ij})^k - (b^x_{ij})^k)
-- \nabla_y((d^y_{ij})^k - (b^y_{ij})^k)
+-  (D^-_x, D^-_y) \cdot  (d^k_{ij} - b^k_{ij} )
 \right) 
 \label{eq:sbuij}
 \end{align}
 and 
 \begin{align}
-u_{ij}  = \max \{ \min\{ \widetilde u_{ij}, 1 \} , 0 \}.
+u_{ij}^{k+1}  = \max \{ \min\{ \widetilde u_{ij}, 1 \} , 0 \}.
 \label{eq:sbuij2}
 \end{align}
 The full algorithm, to summarize, is
@@ -265,3 +263,5 @@ The full algorithm, to summarize, is
 \end{enumerate}
 With regards to step 4, the authors in \cite{goldstein2010geometric} recommend just one sweep of Gauss-Seidel rather than iterating to full convergence. The reason being that any advantage would be lost against the error in the updates to the Bregman parameter, $b^{k+1}$.
 
+
+\section{Examples}
