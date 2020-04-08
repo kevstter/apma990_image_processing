@@ -111,7 +111,7 @@ with boundary condition $\delta_\varepsilon
 
 \section{Numerical discretization}
 \label{sec:3.2}
-As was mentioned, the numerical scheme we apply to \eqref{eq:acwe_el} will largely be the same as the scheme detailed for the GAC model in \Cref{sec:gac_num_disc}. The difference are $\delta_\varepsilon(\phi^n_{ij})$ in place of $\abs{\nabla^0 \phi^n}$, $g_{ij} = 1$ for all $(i,j)$, and the inclusion of the new fitting terms.
+As was mentioned, the numerical scheme we apply to \eqref{eq:acwe_el} will largely be the same as the scheme detailed for the GAC model in \Cref{sec:gac_num_disc}. The difference are $\delta_\varepsilon(\phi^n_{ij})$ in place of $\abs{D^0 \phi^n}$, $g_{ij} = 1$ for all $(i,j)$, and the inclusion of the new fitting terms.
 
 The fitting terms are straightforward to handle as they have no explicit $\phi$-dependence. Let $r(x) = [(c_1 - f(x))^2 - (c_2 - f(x))^2 ]$. Then at the beginning of each timestep, update $c_1$ and $c_2$ according to \eqref{eq:c1} and \eqref{eq:c2} and set
 \begin{align*}
