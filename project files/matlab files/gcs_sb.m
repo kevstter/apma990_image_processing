@@ -48,13 +48,11 @@ function[u] = gcs_sb(im, varargin)
 % Model parameters
   lambda = 0.50;
   thres = 0.50;
-  oldC1 = -1;  % "initial" region avg: c1 and c2
-  oldC2 = -1; 
  
 % Misc
   ep = 1e-6;
   ep2 = ep*ep;
-  tol = 1e-6; % stopping tol  
+  tol = 1e-2; % stopping tol  
   
 %% Load initial data
   if isa(im, 'char') == 1
@@ -63,7 +61,7 @@ function[u] = gcs_sb(im, varargin)
   else
     u0 = im2double(im);
   end
-  u0 = u0 / max(abs(u0(:))); % brings initial image satisfies -1<=u<=1
+%   u0 = u0 / max(abs(u0(:))); % brings initial image satisfies -1<=u<=1
   [M, N] = size(u0);
  
 % Add noise
@@ -82,12 +80,9 @@ function[u] = gcs_sb(im, varargin)
   
 %% Initialize u, d=grad(u), 'bregman' term b
   u = u0;
-  umax = max(u(:));
-  umin = min(u(:));
-  u = (u - umin)/(umax - umin);
-  alpha = zeros(size(u));
+  oldu = u;
   
-  [dy, dx] = imgradientxy( u0, 'intermediate' );
+  [dy, dx] = imgradientxy( u, 'intermediate' );
   bx = zeros(size(u));
   by = zeros(size(u));
 
@@ -100,12 +95,12 @@ function[u] = gcs_sb(im, varargin)
 for iter=1:iter_max
 % Compute region average C1, C2:
   if nnz(u>thres) == 0
-    C1 = ep2;
+    C1 = 0;
   else
     C1 = mean(u0(u>thres),'all');
   end
   if nnz(u<=thres) == 0
-    C2 = ep2;
+    C2 = 0;
   else
     C2 = mean(u0(u<=thres),'all');
   end
@@ -114,10 +109,10 @@ for iter=1:iter_max
   % Gauss-Seidel type pointwise updates
   for i=2:M-1
     for j=2:N-1
-      alpha(i,j) = dx(i-1,j) - dx(i,j) - bx(i-1,j) + bx(i,j) ...
+      alpha = dx(i-1,j) - dx(i,j) - bx(i-1,j) + bx(i,j) ...
         + dy(i,j-1) - dy(i,j) - by(i,j-1) + by(i,j);
       beta = 0.25*( u(i-1,j) + u(i+1,j) + u(i,j-1) + u(i,j+1)  ...
-        - (mu/lambda)*r(i,j) + alpha(i,j) );
+        - (mu/lambda)*r(i,j) + alpha);
       u(i,j) = max( min(beta,1), 0 );
     end
   end
@@ -139,16 +134,15 @@ for iter=1:iter_max
   by = BCs(by, M, N);
   
 % Stopping criteria; min 5 iterations
-  if abs(C1-oldC1)/(C1+ep2)<tol && abs(C2-oldC2)/(C2+ep2)<tol && iter>4
+  if norm(u-oldu,'fro') < tol && iter>4
     break;
   else
-    oldC1 = C1;
-    oldC2 = C2;
+    oldu = u;
   end
 
 % Mid-cycle updates
 %   fprintf('Iter = %3d, C1 = %4.4g, C2 = %4.4g\n', iter, C1, C2);
-  if mod(iter, 36) == 0    % change to small# for more updates
+  if mod(iter, 500) == 0    % change to small# for more updates
     plotseg(u0, u, fignum, lambda, C1, C2, iter);
   end
 end 
@@ -177,7 +171,7 @@ function[] = plotseg(u0, u, fignum, lambda, C1, C2, Iter)
     'fontsize', 20)
   
   subplot(3,3,[4 7])
-  imagesc( u ); axis('image', 'off'); colormap(gray);
+  imagesc( v ); axis('image', 'off'); colormap(gray);
   title('\bf After thresholding u' ,'fontsize', 20)
   
   h = gca; 
