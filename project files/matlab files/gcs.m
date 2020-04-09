@@ -30,9 +30,10 @@ function[u] = gcs(im, varargin)
 % [1] ChanEsedogluNikolova, Algos for finding global minimizers...(2006)
 % [2] ChanVese, Active contours without edges (2001)
 % [3] BressonEsedogluVanderheynstThiranOsher, Fast global minim...(2007)
+% [4] PinarZenios, On smoothing exact penalty functions for...(1994)
 %
 % Created: 26Mar2020
-% Last modified: 29Mar2020
+% Last modified: 08Apr2020
 %
 
 %% Read inputs: (im, lambda, edge, noisy, iter_max, fignum)
