@@ -2,6 +2,25 @@ function[u0, r] = init_im( im )
 %% Create simple synthetic image for testing segmentation codes
   u0 = zeros(256,256);
   switch im
+    case 'blank'
+      r = 10;
+      
+    case 'grid' 
+      n = 15;
+      n1 = 67-n;
+      n2 = 61;
+      v0 = zeros(size(u0));
+      v0(1:n*2,1:n*2) = 255;
+      u0 = u0 + circshift(v0, [n1,n1]);
+      u0 = u0 + circshift(v0, [n1,n1+n2*1]);
+      u0 = u0 + circshift(v0, [n1,n1+n2*2]);
+      u0 = u0 + circshift(v0, [n1+n2*1-22,n1+n2*0]);
+      u0 = u0 + circshift(v0, [n1+n2*1-22,n1+n2*2]);
+      u0 = u0 + circshift(v0, [n1+n2*2,n1+n2*2]);
+      u0 = u0 + circshift(v0, [n1+n2*2,n1+n2*1]);
+      u0 = u0 + circshift(v0, [n1+n2*2,n1+n2*0]);
+      r =110;
+      
     case 'sqr1' % centred square
       u0(100:150,100:150) = 255; 
       r = 45;

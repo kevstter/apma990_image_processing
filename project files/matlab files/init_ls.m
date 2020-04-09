@@ -27,5 +27,14 @@ function[phi, x, y] = init_ls( N, M, r, phi_type )
           phi = max(phi, -sqrt( (X- 25*(i-1)-12.5).^2 + (Y-25*(j-1)-12.5).^2 ) + r);
         end
       end  
+      
+    case {'grid'}
+      phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + 30;
+      phi = max(phi, -sqrt( (X-(N+1)/2).^2 + (Y-190).^2 ) + 25);
+      phi = max(phi, -sqrt( (X -(132)/2).^2 + (Y-125/2).^2 ) + 27);
+%       phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + r;
+%       
+    case 'blank'
+      phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + r;
   end
 end
