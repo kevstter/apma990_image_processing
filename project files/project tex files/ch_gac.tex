@@ -143,21 +143,59 @@ The Gauss-Seidel iterations would be (if working through $(i,j)$ in the usual or
 \right)
 \right).
 \end{align*}
-One final note with regards to this numerical discretization. It is suggested to alternate the discretization of the divergence term, eg. applying $D^+_x$ on the outside and $D^-_x$ inside, and with various combinations with $D^+_y$, $D^-_y$ as well. However in testing we were unable to observe any difference visually.
+One final note with regards to this numerical discretization. It is suggested to alternate the discretization of the divergence term, eg. applying $D^+_x$ on the outside and $D^-_x$ inside, and with various combinations with $D^+_y$, $D^-_y$ as well. Our testing shows this alternating reduces asymmetries in our solutions to the GAC model but produces no observable differences with our later segmentation models.
 
 
-\section{Examples} 
-
-unable to capture interior contours automatically
-
-highly sensitive to initial contour
-
-slow convergence. Authors suggest modifying the GAC model
+\section{Examples and discussion} 
+In this section, parameters are $\Delta t = 0.05$, $h = 1$, and $\varepsilon = 10^{-6}$, unless otherwise stated.
+The edge indicator function used is 
 \begin{align*}
-\phi_t = 
-\abs{\nabla \phi} \Div\left( g \frac{\nabla \phi}{\abs{\nabla \phi}} \right) 
-+ cg \abs{\nabla \phi} 
-= \left( g ( c + \kappa) + \nabla g \cdot \frac{\nabla \phi}{\abs{\nabla \phi}} \right) \abs{\nabla \phi}
+g = \frac{1}{1 + \abs{\nabla \widetilde f}^2 },
 \end{align*}
-which is adding a constant velocity in the normal direction. For $c>0$, this will cause the contour to expand, and if $c<0$, contract.
+where $\widetilde f$ is a Gaussian-smoothed version of the image $f$. Modification of the GAC model to include a constant velocity, $c$, in the normal direction, 
+\begin{align}
+\phi_t 
+= \left( g ( c + \kappa) + \nabla g \cdot \frac{\nabla \phi}{\abs{\nabla \phi}} \right) \abs{\nabla \phi}
+= 
+\abs{\nabla \phi} \Div\left( g \frac{\nabla \phi}{\abs{\nabla \phi}} \right) 
++ cg \abs{\nabla \phi},
+\label{eq:gac+c}
+\end{align}
+and is explored as well. See the examples for more detail.
+
+
+\begin{eg}
+	In our first series of tests is a synthetic image with 8 objects (squares). We run four scenarios with this image. The two rows of \Cref{fig:grid} represent two different initial contours. For the top row, the initial contour is a single, giant circle, and from this initial state we run two cases.  Not adding a constant normal velocity, i.e. $c = 0$, we get a bounding box on our eight squares. The contour does not drive into the gaps. Supplied with an extra push, i.e. setting $c = -1$, the segmentation algorithm picks out all eight squares.
+	
+	In the second row, we have multiple circles forming the initial contour, with two of the circles enclosing one square each and the centre circle feeling a little empty. Setting $c = -1$, the contours contract, causing the centre circle to vanish and the other two to wrap tightly around their square. Setting $c = 1$, the contours expand, missing two squares.
+	
+	We find the model adheres to edges nicely. Whenever the contour locates an edge, it will stay there. However, even with limited testing it is clear that this method requires significant high level input in at least two ways. Firstly, the ``right'' initial contour is needed to generate the desired result. That may mean, for every image, a user having to drawing a rough contour around all objects before letting the algorithm take over. Second would be to specify $c$. Not only can nonzero values of $c$ produce drastically different results from $c = 0$, but it also drove the solution to steady state much quicker. The total number of iterations was reduced by a factor of over $100$ in some cases.
+	
+	\begin{figure}[htb!]
+		\centering
+		\begin{minipage}{0.31\textwidth}
+					\includegraphics[width=\textwidth]{grid1}
+		\end{minipage}%
+		\begin{minipage}{0.31\textwidth}
+			\includegraphics[width=\textwidth]{grid1ssc0}
+		\end{minipage}%
+		\begin{minipage}{0.31\textwidth}
+			\includegraphics[width=\textwidth]{grid1sscm1}
+		\end{minipage}
+		\begin{minipage}{0.31\textwidth}
+			\includegraphics[width=\textwidth]{grid2}
+		\end{minipage}%
+		\begin{minipage}{0.31\textwidth}
+			\includegraphics[width=\textwidth]{grid2ssc0}
+		\end{minipage}%
+		\begin{minipage}{0.31\textwidth}
+			\includegraphics[width=\textwidth]{grid2sscp1}
+		\end{minipage}
+		
+		\caption{(Left) Initial setup. (Middle) Steady state solution, $c = 0$. (Top right) Steady state solution, $c = -1$. (Bottom right) Steady state solution, $c = 1$.}\label{fig:grid}
+	\end{figure}
+\end{eg}
+
+In closing this chapter, we recognize that while our one example is by no means a comprehensive study on this model, we have identified a key property we fully expect the next segmentation models to improve upon, namely sensitivity to the initial condition and reliance on high level input.
+	
 
