@@ -1,4 +1,4 @@
-function[phi, im] = gac(im, varargin)
+function[phi, u0] = gac(im, varargin)
 %% gac(im, dt, c, noisy, iter_max, fignum, phi_type)
 % Inputs:
 %   im: select synthetic image (see options below) for segmentation
@@ -10,7 +10,7 @@ function[phi, im] = gac(im, varargin)
 %   phi_type: level set function initialization
 % Output:
 %   phi: levet set function
-%   im: initial image
+%   u0: initial image
 %
 % Matlab code modified from 
 %     http://www.math.ucla.edu/~lvese/285j.1.05s/TV_L2.m
@@ -90,25 +90,28 @@ for iter=1:iter_max
 % Update pointwise (Gauss-Seidel type scheme)  
   for i = 2:M-1
     for j = 2:N-1
+%       pm = [0 -1 0 -1];
+      pm = get_edge(iter); 
+      pm1=pm(1); pm2=pm(2); pm3=pm(3); pm4=pm(4);
       phix = ( phi(i+1,j) - phi(i,j) )/h;
       phiy = ( phi(i,j+1) - phi(i,j-1) )/(2*h);
       Gradu = sqrt( ep2 + phix*phix + phiy*phiy );
-      co1 = g(i,j) ./ Gradu;
+      co1 = g(i+pm1,j) ./ Gradu;
 
       phix = ( phi(i,j) - phi(i-1,j) )/h;
       phiy = ( phi(i-1,j+1) - phi(i-1,j-1) )/(2*h);
       Gradu = sqrt( ep2 + phix*phix + phiy*phiy );
-      co2 = g(i-1,j) ./ Gradu;
+      co2 = g(i+pm2,j) ./ Gradu;
 
       phix = ( phi(i+1,j) - phi(i-1,j) )/(2*h);
       phiy = ( phi(i,j+1) - phi(i,j) )/h;
       Gradu = sqrt( ep2 + phix*phix + phiy*phiy );
-      co3 = g(i,j) ./ Gradu;
+      co3 = g(i,j+pm3) ./ Gradu;
 
       phix = ( phi(i+1,j-1) - phi(i-1,j-1) )/(2*h);
       phiy = ( phi(i,j) - phi(i,j-1) )/h;
       Gradu = sqrt( ep2 + phix*phix + phiy*phiy );
-      co4 = g(i,j-1) ./ Gradu;
+      co4 = g(i,j+pm4) ./ Gradu;
       
       phix = ( phi(i+1,j) - phi(i-1,j) ) / (2*h);
       phiy = ( phi(i,j+1) - phi(i,j-1) ) / (2*h);
@@ -143,15 +146,15 @@ for iter=1:iter_max
   phi = BCs(phi, M, N);
  
 % Stopping criteria
-  n1 = nnz(phi<0);
-  if iter > 10 && abs(n1 - n2) < 2
-    break;
-  else
-    n2 = n1;
-  end
+%   n1 = nnz(phi<0);
+%   if iter > 10 && abs(n1 - n2) < 2
+%     break;
+%   else
+%     n2 = n1;
+%   end
 
 % Mid-cycle plot updates
-  if mod(iter, 20) == 1    % change 500 to small# for more updates
+  if mod(iter, 200) == 1    % change 500 to small# for more updates
     plotseg(u0, phi, fignum, c, iter);
   end
   
@@ -163,6 +166,20 @@ end
 %   fprintf('\n');
 end
 % End of main function
+
+function[g] = get_edge(iter)
+  iter = mod(iter, 4);
+  switch iter
+    case 1
+      g = [0 -1 0 -1];
+    case 2
+      g = [0 -1 1 0];
+    case 3
+      g = [1 0 1 0];
+    case 0
+      g = [1 0 0 -1];
+  end
+end
 
 function[] = plotseg(u0, phi, fignum, c, iter)
 %% Visualize intermediate and final results 
