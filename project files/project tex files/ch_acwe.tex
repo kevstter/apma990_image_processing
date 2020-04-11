@@ -119,14 +119,14 @@ r_{ij}^n = \big[ (c_1^n - f_{ij})^2 - (c_2^n - f_{ij})^2 \big].
 \end{align*}
 The expression for $\delta_\varepsilon(\phi)$ follows straight from our choice of $H_\varepsilon(\phi)$, which we set as in \cite{chan2001active}:
 \begin{align*}
-H_\varepsilon(\xi)
+H_\varepsilon(z)
  = \frac{1}{2} 
 \left(1 + \frac{2}{\pi}\arctan
-\left(\frac{\xi}{\varepsilon} 
+\left(\frac{z}{\varepsilon} 
 \right) \right)
 \implies 
-\delta_\varepsilon(\xi)  
-=  \frac{1}{\pi}\frac{\varepsilon}{\varepsilon^2  + \xi^2}.
+\delta_\varepsilon(z)  
+=  \frac{1}{\pi}\frac{\varepsilon}{\varepsilon^2  + z^2}.
 \end{align*}
 Very important to note that this choice of $H_\varepsilon$ is ``global'', and it relates to the convexity of $\eacwe$. The authors argue against a compactly supported regularization of $H$, saying that because the energy is non-convex and may admit local minima, a global $H_\varepsilon$ is more likely to compute a global minimizer and allows the model to automatically detect interior contours (both of which they observed in practice). We also set $\varepsilon = h$ as recommended, i.e. use $\delta_h(\phi_{ij})$.
 
@@ -142,5 +142,56 @@ All together, this gives us the numerical scheme
 \end{align*}
 with $a_1, a_2, a_3, a_4$  as given in \Cref{sec:gac_num_disc}, $g_{ij} = 1$, and $a_0 = 1 + \Delta t \delta_h(\phi_{ij}^n)(a_1 + a_2 + a_3 + a_4)$.
 
-\section{Examples}
+\section{Examples and discussion}
+In this section, parameters are $\Delta t = 0.1$, $h = 1$, and $\varepsilon = 10^{-6}$, $\lambda = 10$, unless otherwise stated.
 
+We start with a repeat of the eight squares example from the previous section and with Gaussian white noise added to the initial image, see \Cref{fig:grid_acwe}. We tested with five different initial contours and all reached the desired segmentation. With an ability to easily handle noisy images, and detect objects without significant user input certainly puts the ACWE model ahead of the GAC model.
+
+\begin{figure}[htb!]
+	\centering
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{acgrid1}
+	\end{minipage}%
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{acgrid5}
+	\end{minipage}%
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{acgrid4}
+	\end{minipage}
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{acgrid3}
+	\end{minipage}%
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{acgrid2}
+	\end{minipage}%
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{acgridsol}
+	\end{minipage}
+	
+	\caption{Only the bottom right  is a plot of the final state. The five others are different initial contours.}
+	\label{fig:grid_acwe}
+\end{figure}
+However, this method is not guaranteed to find the global minimizer. In \Cref{fig:target_acwe} is one such example where from 3 different starting contours, we ended at 3 slightly different results. The section will introduce a convex segmentation model with which one can guarantee to find a global minimum regardless of the starting contour. We also introduce a fast algorithm from convex minimization which offers both better speed and quality of segmentation.
+\begin{figure}[htb!]
+	\centering
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{brainacout0}
+	\end{minipage}%
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{brainaccir0}
+	\end{minipage}%
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{brainacbub0}
+	\end{minipage}
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{brainacout}
+	\end{minipage}%
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{brainaccir}
+	\end{minipage}%
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{brainacbub}
+	\end{minipage}
+	\caption{(Top) Initial image with different starting contours. (Bottom) Steady state solutions.}
+	\label{fig:target_acwe}
+\end{figure}
