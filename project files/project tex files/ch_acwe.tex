@@ -69,66 +69,66 @@ where we used $\abs{\cdot}$ to denote the area of a set. Next is the minimizatio
 &=
 \int_{\Omega} (c_2 - f(x))^2 (1 - H(\phi(x))) \dx
 \end{align}
-Looking ahead, to derive the Euler-Lagrange equation may require differentiating the Heaviside and the delta function. This technicality is averted by subsituting with a regularized version: $H_\varepsilon \in C^2$, and $H_\varepsilon \rightarrow H$ as $\varepsilon\rightarrow 0$ and denote $\delta_\varepsilon = H'_\varepsilon$. Thus the regularized energy (which we will continue to call $\eacwe$ for convenience) is then 
+Looking ahead, to derive the Euler-Lagrange equation may require differentiating the Heaviside and the delta function. This technicality is averted by subsituting with a regularized version: $H_\eta \in C^2$, and $H_\eta \rightarrow H$ as $\eta\rightarrow 0$ and denote $\delta_\eta = H'_\eta$. Thus the regularized energy (which we will continue to call $\eacwe$ for convenience) is then 
 \begin{align*}
 \eacwe(\phi) 
-&= \int_{\Omega } \abs{\nabla H_\varepsilon(\phi(x))} \dx 
-+ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) 
-+ (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx
+&= \int_{\Omega } \abs{\nabla H_\eta(\phi(x))} \dx 
++ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\eta(\phi(x)) 
++ (c_2 - f(x))^2 (1 - H_\eta(\phi(x))) \dx
 \\
-&= \int_{\Omega } \delta_\varepsilon(\phi(x)) \abs{\nabla \phi(x)} \dx 
-+ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\varepsilon(\phi(x)) 
-+ (c_2 - f(x))^2 (1 - H_\varepsilon(\phi(x))) \dx,
+&= \int_{\Omega } \delta_\eta(\phi(x)) \abs{\nabla \phi(x)} \dx 
++ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\eta(\phi(x)) 
++ (c_2 - f(x))^2 (1 - H_\eta(\phi(x))) \dx,
 \end{align*}
 and its first variation
 \begin{align*}
 \dd{}{\gamma}\eacwe(\phi + \gamma h) \bigg\rvert_{\gamma = 0}
-&= \int_{\Omega} \delta'_\varepsilon(\phi) \abs{\nabla \phi} h + \delta_\varepsilon(\phi) \frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \nabla h \dx
-+ \lambda\int_{\Omega} \underbrace{\left[(c_1 - f)^2 - (c_2 - f)^2 \right]}_{=r(x)} \delta_\varepsilon(\phi) h \dx 
+&= \int_{\Omega} \delta'_\eta(\phi) \abs{\nabla \phi} h + \delta_\eta(\phi) \frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \nabla h \dx
++ \lambda\int_{\Omega} \underbrace{\left[(c_1 - f)^2 - (c_2 - f)^2 \right]}_{=r(x)} \delta_\eta(\phi) h \dx 
 \\
-&= \int_{\Omega } \delta'_\varepsilon \abs{\nabla \phi} h
-- \Div\left(\delta_\varepsilon\frac{\nabla \phi}{\abs{\nabla \phi}}  \right)  h
+&= \int_{\Omega } \delta'_\eta \abs{\nabla \phi} h
+- \Div\left(\delta_\eta\frac{\nabla \phi}{\abs{\nabla \phi}}  \right)  h
 \dx 
-+ \int_\Gamma h\delta_\varepsilon\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma 
-+ \lambda\int_{\Omega} r \delta_\varepsilon h \dx
++ \int_\Gamma h\delta_\eta\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma 
++ \lambda\int_{\Omega} r \delta_\eta h \dx
 \\
-&= \int_{\Omega} \delta_\varepsilon\left[ 
+&= \int_{\Omega} \delta_\eta\left[ 
 - \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) + \lambda r
 \right] h\dx 
-+ \int_\Gamma h\delta_\varepsilon\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma. 
++ \int_\Gamma h\delta_\eta\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma. 
 \end{align*}
 The gradient descent evolution is thus 
 \begin{align}
 \phi_t 
-= \delta_\varepsilon(\phi) \left[ 
+= \delta_\eta(\phi) \left[ 
 \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) - \lambda (c_1 - f)^2 + \lambda (c_2 - f)^2 
 \right]
 \label{eq:acwe_el}
 \end{align}
-with boundary condition $\delta_\varepsilon 
+with boundary condition $\delta_\eta 
 \frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal = 0$.
 
 
 \section{Numerical discretization}
 \label{sec:3.2}
-As was mentioned, the numerical scheme we apply to \eqref{eq:acwe_el} will largely be the same as the scheme detailed for the GAC model in \Cref{sec:gac_num_disc}. The difference are $\delta_\varepsilon(\phi^n_{ij})$ in place of $\abs{D^0 \phi^n}$, $g_{ij} = 1$ for all $(i,j)$, and the inclusion of the new fitting terms.
+As was mentioned, the numerical scheme we apply to \eqref{eq:acwe_el} will largely be the same as the scheme detailed for the GAC model in \Cref{sec:gac_num_disc}. The difference are $\delta_\eta(\phi^n_{ij})$ in place of $\abs{D^0 \phi^n}$, $g_{ij} = 1$ for all $(i,j)$, and the inclusion of the new fitting terms.
 
 The fitting terms are straightforward to handle as they have no explicit $\phi$-dependence. Let $r(x) = [(c_1 - f(x))^2 - (c_2 - f(x))^2 ]$. Then at the beginning of each timestep, update $c_1$ and $c_2$ according to \eqref{eq:c1} and \eqref{eq:c2} and set
 \begin{align*}
 r_{ij}^n = \big[ (c_1^n - f_{ij})^2 - (c_2^n - f_{ij})^2 \big].
 \end{align*}
-The expression for $\delta_\varepsilon(\phi)$ follows straight from our choice of $H_\varepsilon(\phi)$, which we set as in \cite{chan2001active}:
+The expression for $\delta_\eta(\phi)$ follows straight from our choice of $H_\eta(\phi)$, which we set as in \cite{chan2001active}:
 \begin{align*}
-H_\varepsilon(z)
+H_\eta(z)
  = \frac{1}{2} 
 \left(1 + \frac{2}{\pi}\arctan
-\left(\frac{z}{\varepsilon} 
+\left(\frac{z}{\eta} 
 \right) \right)
 \implies 
-\delta_\varepsilon(z)  
-=  \frac{1}{\pi}\frac{\varepsilon}{\varepsilon^2  + z^2}.
+\delta_\eta(z)  
+=  \frac{1}{\pi}\frac{\eta}{\eta^2  + z^2}.
 \end{align*}
-Very important to note that this choice of $H_\varepsilon$ is ``global'', and it relates to the convexity of $\eacwe$. The authors argue against a compactly supported regularization of $H$, saying that because the energy is non-convex and may admit local minima, a global $H_\varepsilon$ is more likely to compute a global minimizer and allows the model to automatically detect interior contours (both of which they observed in practice). We also set $\varepsilon = h$ as recommended, i.e. use $\delta_h(\phi_{ij})$.
+Very important to note that this choice of $H_\eta$ is ``global'', and it relates to the convexity of $\eacwe$. The authors argue against a compactly supported regularization of $H$, saying that because the energy is non-convex and may admit local minima, a global $H_\eta$ is more likely to compute a global minimizer and allows the model to automatically detect interior contours (both of which they observed in practice). We also set $\eta = h$ as recommended, i.e. use $\delta_h(\phi_{ij})$.
 
 All together, this gives us the numerical scheme
 \begin{align*}
