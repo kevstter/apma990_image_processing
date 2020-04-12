@@ -1,6 +1,6 @@
 \chapter{Globally Convex Segmentation}
 \label{ch:gcs}
-Our numerical examples with the two models, GAC and ACWE, show still plenty of room for improvement from the modelling perspective. Of particular concern is this knack for finding and getting stuck at local minima (by design, in case of the GAC model), and therefore the solution we get is dependent on the initial contour we set. These issues are address by Chan, Esedo\={g}lu, and Nikolova \cite{chan2006algorithms}, and their ideas further refined by Bresson et al. \cite{bresson2007fast}, in what they referred to as the convexification of the ACWE model and the unification of two models we have considered.
+Our numerical examples with the two models, GAC and ACWE, show still plenty of room for improvement from the modelling perspective. Of particular concern is this knack for finding and getting stuck at local minima (by design, in case of the GAC model), and therefore the solution we get is dependent on the initial contour we set. These issues are address by Chan, Esedo\={g}lu, and Nikolova \cite{chan2006algorithms}, and their ideas further refined by Bresson et al. \cite{bresson2007fast}, in what they referred to as the convexification of the ACWE model and the unification of GAC and ACWE models.
 
 In this chapter our viewpoint on the segmentation problem shifts somewhat. With the two previous models, the expression and evolution of the active contour, in the form of a level set function, was at the forefront. When we turn to the globally convex segmentation (GCS) model, the viewpoint shifts to subsets and indicator functions of these subsets. Keep in mind that for 2-phase segmentation any subset $\Sigma \subset \Omega$, and equivalently the corresponding indicator function $\ind_\Sigma$, defines a segmentation of the image domain. Thus the objective is to determine an indicator function $u(x) = \ind_\Sigma(x)$, and a piecewise constant solution $\widetilde u(x) = c_1 \ind_\Sigma(x) + c_2 (1 - \ind_\Sigma(x))$. 
 
@@ -17,7 +17,7 @@ First we address the non-convexity in the ACWE model. Restating the optimization
 Observe that the function set we are optimizing over is not convex. For instance suppose $\Sigma_1, \Sigma_2 \subset \Omega$, $\Sigma_1 \cap \Sigma_2 = \emptyset$, $\Omega \setminus (\Sigma_1 \cup \Sigma_2) \neq \emptyset$ and set $u_1 = \ind_{\Sigma_1}$ and $u_2 = \ind_{\Sigma_2}$. Then any convex combination $w = ku_1 + (1-k)u_2$, $k \in (0,1)$, would be a function that takes on three values. Addressing the issue of convexity are two key theorems presented in the next section which relaxes the restriction on our function space, allows $u$ to take on the continuum of values between 0 and 1, and leads to an equivalent but convex minimization problem.
 
 \section{A unified GAC \& ACWE convex segmentation model}
-The key observation made by Chan et al. \cite{chan2006algorithms} is that in choosing a non-compactly support $H_\varepsilon$ for the gradient descent evolution \eqref{eq:acwe_el}, the following gradient flow will have the same steady state solutions: 
+The key observation made by Chan et al. \cite{chan2006algorithms} is that in choosing a non-compactly support $H_\eta$ for the gradient descent evolution \eqref{eq:acwe_el}, the following gradient flow will have the same steady state solutions: 
 \begin{align*}
 \phi_t = \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) 
 - \lambda (c_1 - f)^2 + \lambda (c_2 - f)^2 .
@@ -42,7 +42,7 @@ which gets us to the first of two key theorems from \cite{chan2006algorithms}.
 	\right\}
 	\label{eq:thm1}
 	\end{align}
-	and then setting $\Sigma = \{ x \mid u(x) \geq \mu \}$ for a.e. $\mu \in [0, 1]$.
+	and then setting $\Sigma = \{ x \mid u(x) \geq \zeta \}$ for a.e. $\zeta \in [0, 1]$.
 	\label{thm:1}
 \end{thm}
 The theorem above links the two energies, $\eacwe$ and $\widetilde E_\textrm{ACWE}$,
@@ -113,18 +113,18 @@ u_t = \Div\left( g(x)  \frac{\nabla u}{\abs{\nabla u}} \right) - \lambda r(x,c_1
 \end{align}
 and boundary condition $g\frac{\nabla u}{\abs{\nabla u}} \cdot \normal = 0$. 
 
-Those familiar with exact penalty functions will note a small techical issue with the descent equation. As defined in Theorem \ref{thm:2}, $\nu(z)$ has two points of non-differentiability at $z = 0$ and $z = 1$. It will be necessary to substitute with a smooth penalty function, $\nu_\varepsilon(z)$. In our numerical examples, we use
+Those familiar with exact penalty functions will note a small techical issue with the descent equation. As defined in Theorem \ref{thm:2}, $\nu(z)$ has two points of non-differentiability at $z = 0$ and $z = 1$. It will be necessary to substitute with a smooth penalty function, $\nu_\mu(z)$. In our numerical examples, we use
 \begin{align*}
-\nu_\varepsilon(z) = \begin{cases}
--2z - \varepsilon/2, & z < -\frac{\varepsilon }{2}
+\nu_\mu(z) = \begin{cases}
+-2z - \mu/2, & z < -\frac{\mu }{2}
 \\
-\frac{2}{\varepsilon} z^2, &-\frac{\varepsilon}{2} \leq z < 0
+\frac{2}{\mu} z^2, &-\frac{\mu}{2} \leq z < 0
 \\
 0, & 0\leq z \leq 1
 \\
-\frac{2}{\varepsilon}(z-1)^2, & 1 < x \leq 1 + \frac{\varepsilon }{2}
+\frac{2}{\mu}(z-1)^2, & 1 < x \leq 1 + \frac{\mu }{2}
 \\
-2(z - 1) - \frac{\varepsilon }{2}, & z > 1+\frac{\varepsilon }{2}.
+2(z - 1) - \frac{\mu }{2}, & z > 1+\frac{\mu }{2}.
 \end{cases}
 \end{align*}
 This choice is similar to one analyzed by Pinar and Zenios \cite{pinar1994smoothing}.
@@ -136,7 +136,7 @@ u^{n+1}_{ij}
 \left( u^n_{ij} + \Delta t 
 \left( a_1 u^n_{i+1,j} + a_2 u^{n+1}_{i-1,j} + a_3 u^{n}_{i,j+1} + a_4 u^{n+1}_{i,j-1}
 - \lambda r_{ij}^n
-- \alpha \nu'_\varepsilon( u^n_{ij} )
+- \alpha \nu'_\mu( u^n_{ij} )
 \right)
 \right),
 \end{align*}
@@ -144,9 +144,9 @@ with $a_1,a_2,a_3,a_4$ as given in \Cref{sec:gac_num_disc} and $a_0 = 1 + \Delta
 
 
 \subsection{The Split Bregman method applied to the GCS model}
-From the beginning we have said that minimization by way of the Euler-Lagrange equation is an extremely general technique and have now seen it applied to two non-convex and one convex segmentation model. But with a convex model, it would be negligent to not consider efficient solvers from convex optimization. 
+From the beginning we have said that minimization by way of the Euler-Lagrange equation is an extremely general technique and have now seen it applied to two non-convex and one convex segmentation model. With a convex model, it would be negligent to not consider efficient solvers from convex optimization. 
 
-In \cite{goldstein2010geometric}, Goldstein, Bresson and Osher applied the Split Bregman method \cite{goldstein2009split} to the GCS image segmentation model with good results. One advantage of using the Split Bregman method is that we are able to solve the minimization problem \eqref{eq:min_gcs} without the need of the exact penalty function  or any added regularization required due to division by $\abs{\nabla u}$. We will compare and contrast this alternative to the earlier gradient descent approach. 
+In \cite{goldstein2010geometric}, Goldstein, Bresson and Osher applied the Split Bregman method \cite{goldstein2009split} to the GCS image segmentation model with good results. One advantage of using the Split Bregman method is that we are able to solve the minimization problem \eqref{eq:min_gcs} without the need of the exact penalty function  or any added regularization required due to division by $\abs{\nabla u}$. We will compare and contrast this alternative to the earlier gradient descent approach. Additional details of the Bregman and Split Bregman are provided in the Appendix \ref{appdx:sb}.  
 
 To derive the Split Bregman formulation, we start with expressing \eqref{eq:min_gcs} in discrete form: 
 \begin{align*}
@@ -225,14 +225,14 @@ which combines as
 d_{ij}^x 
 = \frac{ \nabla_x u^{k+1}_{ij} + (b^x_{ij})^k }{ \norm{\nabla u^{k+1}_{ij} + b^k_{ij} }_2} \left( \norm{\nabla u^{k+1}_{ij} + b^k_{ij} }_2 - \frac{g_{ij}}{\theta} \right), 
 \end{align*}
-and similarly for $d^y_{ij}$. Otherwise, there is one other critical point giving the minimum at $d = 0$. The full solution is typically presented as 
+and similarly for $d^y_{ij}$. Otherwise, there is one other critical point giving the minimum at $d = 0$. The full solution may be presented as
 \begin{align}
 d^{k+1}
 = \max\left( \norm{ \nabla u^{k+1} + b^k}_2 - \frac{g}{\theta}, 0 \right) \frac{ \nabla u^{k+1} + b^k}{ \norm{ \nabla u^{k+1} + b^k}_2}.
 \label{eq:sbdij}
 \end{align}
 
-The solution to \eqref{eq:splitu} can be found by first differentiating to get $0 = \lambda  +\theta  \nabla \cdot ( d^k - \nabla u - b^k) \iff \Delta u = \frac{\lambda}{\theta} r + \nabla \cdot (d^k - b^k)$. As the energy \eqref{eq:splitu} is quadratic in $u_{ij}$, either the optimal value is this unconstrained minimizer, $\widetilde u_{ij}$, or if $\widetilde{u}_{ij} \notin [0,1]$, the optimal value we seek is $0$ or $1$, whichever is nearer. For instance with centred differencing of the Laplacian, we have 
+The solution to \eqref{eq:splitu} can be found by first differentiating to get $0 = \lambda  +\theta  \nabla \cdot ( d^k - \nabla u - b^k) \implies \Delta u_{ij} = \frac{\lambda}{\theta} r_{ij} + \nabla \cdot (d^k_{ij} - b^k_{ij})$. As the energy \eqref{eq:splitu} is quadratic in $u_{ij}$, either the optimal value is this unconstrained minimizer, call it $\widetilde u_{ij}$, or if $\widetilde{u}_{ij} \notin [0,1]$, the optimal value we seek is $0$ or $1$, whichever is nearer. For instance with centred differencing of the Laplacian, we have 
 \begin{align}
 \widetilde u_{ij} = \frac{1}{4}\left(
 u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1} 
@@ -261,7 +261,37 @@ The full algorithm, to summarize, is
 	
 	\item Repeat from step 1 if $\norm{u^{k+1} - u^k} > \textrm{tol}$.
 \end{enumerate}
-With regards to step 4, the authors in \cite{goldstein2010geometric} recommend just one sweep of Gauss-Seidel rather than iterating to full convergence. The reason being that any advantage would be lost against the error in the updates to the Bregman parameter, $b^{k+1}$.
+With regards to step 4, the authors in \cite{goldstein2010geometric} recommend just one sweep of Gauss-Seidel rather than iterating to full convergence, arguing that any advantage from iterating to full convergence would be lost to the error in the updates to the Bregman parameter, $b^{k+1}$.
 
 
-\section{Examples}
+\section{Examples and discussion}
+In the examples to follow, the GCS model \eqref{eq:min_gcs} is solved by two numerical algorithms. The parameters used consistently throughout are summarized in \Cref{tab:model parameters};  $\lambda$ will be provided with each example. We will be looking for any differences in the quality of the segmentation, and comparing efficiency of each method by their iteration count. 
+
+\begin{table}[htb!]
+	\caption[]{Discretization and model parameters.}
+	\centering
+	\begin{tabular}{lll c ll} \toprule[1.25pt]
+		\multicolumn{3}{c}{Euler-Lagrange} & \phantom{abc} & \multicolumn{2}{c}{Split Bregman}
+		\\ \midrule
+		$h = 1$ & $\Delta t = 0.1$ & $\alpha = \lambda/2$ & & $h = 1$ & $\theta = 0.5$
+		\\
+		$\varepsilon=10^{-6}$ & $\mu = 10^{-3}$
+		\\ \bottomrule[1.25pt]
+	\end{tabular}
+	\label{tab:model parameters}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
