@@ -1,17 +1,15 @@
-function[u,u0] = gcs(im, varargin)
+function[u,u0,E] = gcs(varargin)
 %% gcs(im, lambda, edge, noisy, iter_max, fignum)
 % Inputs:
-%   im: select synthetic image (see options below) for segmentation
-%   lambda: model parameter
+%   im: image; or string to select from default test cases. see init_im.m
+%   lambda: reg parameter
 %   edge: 0 or 1; 
 %   noisy: 1 or 0
 %   iter_max: max # of iterations
 %   fignum: figure# for plotting
 % Output:
 %   u: gradient descent solution; thresholding not yet applied
-%
-% Matlab code modified from 
-%     http://www.math.ucla.edu/~lvese/285j.1.05s/TV_L2.m
+%   u0: initial (noisy) image
 %
 % Image segmentation by the model introduced in [1] (convexification of 
 % ACWE model [2] for 2-phase seg) and advanced in [3]. Gradient descent 
@@ -33,21 +31,21 @@ function[u,u0] = gcs(im, varargin)
 % [4] PinarZenios, On smoothing exact penalty functions for...(1994)
 %
 % Created: 26Mar2020
-% Last modified: 08Apr2020
+% Last modified: 13Apr2020
 %
 
 %% Read inputs: (im, lambda, edge, noisy, iter_max, fignum)
   if nargin < 1
-    error('Missing all inputs');
+    fprintf('Default test example\n')
   end
   numvarargs = length(varargin);
   if numvarargs > 5
     error('Too many inputs...');
   end
   % lambda, edge, noisy, iter_max, fignum, u_type
-  optargs = {1, 0, 0, 50, 90};
+  optargs = {'grid', 10, 0, 1, 1000, 90};
   optargs(1:numvarargs) = varargin;
-  [lambda, edge, noisy, iter_max, fignum] = optargs{:};
+  [im, lambda, edge, noisy, iter_max, fignum] = optargs{:};
 
 %% Set parameters
 % Space & time discretization 
@@ -55,15 +53,15 @@ function[u,u0] = gcs(im, varargin)
   dt = 0.01;
   
 % Model parameters
-  alpha = lambda/2;
-  thres = 0.50;
+  alpha = lambda;
+  thresh = 0.50;
   
 % Regularize TV at the origin 
   ep = 1e-6;
   ep2 = ep*ep;
   
 % Misc
-  tol = 1e-5; % stopping tol  
+  tol = 1e-4; % stopping tol  
   
 %% Load initial data
   if isa(im, 'char') == 1
@@ -77,7 +75,7 @@ function[u,u0] = gcs(im, varargin)
  
 % Add noise
   if noisy == 1
-    sigma = 0.15;
+    sigma = 0.05;
     u0 = u0 + sigma*randn(size(u0));
   end
   
@@ -95,7 +93,7 @@ function[u,u0] = gcs(im, varargin)
   umin = min(u(:));
   u = (u - umin)/(umax - umin);
   
-  [C1,C2] = getc1c2(u,u0,thres);
+  [C1,C2] = getc1c2(u,u0,thresh);
   E = zeros(1,iter_max);
 
 % Show image
@@ -146,12 +144,13 @@ for iter=1:iter_max
   u = BCs(u, M, N);
   
   % Compute region average C1, C2:
-  [C1, C2] = getc1c2(u, u0, thres);
+  [C1, C2] = getc1c2(u, u0, thresh);
   
 % Stopping criteria; min 5 iterations
   % Compute discrete energy
   E(iter) = discrete_E(u, g, lambda, s, alpha);
   if iter>4 && abs( E(iter)-E(iter-1) )/abs(E(iter)) < tol
+    E = E(1:iter);
     break;
   end
 
@@ -205,8 +204,10 @@ function[E] = discrete_E(u, g, lambda, s, alpha)
 end
 
 function[vs] = vsmooth(u)
-% smoothed penalty function
-  vep = 1e-9;
+%% smoothed penalty function
+% See Figure 5 in [1]. See [4]
+%
+  vep = 1e-9;   % should be same values as in vsprime(u)
   vs = zeros(size(u));
   
   cond1 = (u<=-vep/2);
@@ -226,8 +227,8 @@ end
 function[vsp] = vsprime(u)
 %% Derivative of smoothed penalty function, v. 
 % See Figure 5 in [1]. See [4].
-
-  vep = 1e-9;
+%
+  vep = 1e-9;   % should be same value as in vsmooth(u)
   vsp = zeros(size(u));
   
   cond1 = (u<=-vep/2);
