@@ -1,4 +1,4 @@
-function[u] = gcs(im, varargin)
+function[u,u0] = gcs(im, varargin)
 %% gcs(im, lambda, edge, noisy, iter_max, fignum)
 % Inputs:
 %   im: select synthetic image (see options below) for segmentation
@@ -52,20 +52,18 @@ function[u] = gcs(im, varargin)
 %% Set parameters
 % Space & time discretization 
   h = 1.0;
-  dt = 0.05;
+  dt = 0.01;
   
 % Model parameters
   alpha = lambda/2;
   thres = 0.50;
-  oldC1 = -1; C1 = -1;  % "initial" region avg: c1 and c2
-  oldC2 = -1; C2 = -1;
   
 % Regularize TV at the origin 
   ep = 1e-6;
   ep2 = ep*ep;
   
 % Misc
-  tol = 1e-6; % stopping tol  
+  tol = 1e-5; % stopping tol  
   
 %% Load initial data
   if isa(im, 'char') == 1
@@ -96,6 +94,9 @@ function[u] = gcs(im, varargin)
   umax = max(u(:));
   umin = min(u(:));
   u = (u - umin)/(umax - umin);
+  
+  [C1,C2] = getc1c2(u,u0,thres);
+  E = zeros(1,iter_max);
 
 % Show image
   figure(fignum); clf; subplot(3,3,1)
@@ -104,17 +105,9 @@ function[u] = gcs(im, varargin)
   
 %% %%%%%%%%%%    Begin iterations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for iter=1:iter_max
-% Compute region average C1, C2:
-  if nnz(u>thres) == 0
-    C1 = ep2;
-  else
-    C1 = mean(u0(u>thres),'all');
-  end
-  if nnz(u<=thres) == 0
-    C2 = ep2;
-  else
-    C2 = mean(u0(u<=thres),'all');
-  end
+  
+  s = (C1 - u0).^2 - (C2 - u0).^2;
+  vsp = vsprime( u );
   
   % Update pointwise (Gauss-Seidel type semi-implicit scheme)  
   for i = 2:M-1
@@ -142,28 +135,29 @@ for iter=1:iter_max
       co = 1.0 + (dt/h^2)*( co1+co2+co3+co4 );
       
     	div = co1*u(i+1,j) + co2*u(i-1,j) + co3*u(i,j+1) + co4*u(i,j-1);
-      s = ( C1-u0(i,j) )^2 - ( C2-u0(i,j) )^2;
       
-      u(i,j) = (1./co) * ( u(i,j) + dt*( (1/h^2)*div - lambda*s ...
-        - alpha*vp( u(i,j) ) ) );
+      u(i,j) = (1./co) * ( u(i,j) + dt*( (1/h^2)*div - lambda*s(i,j) ...
+        - alpha*vsp(i,j) ) );
     end
   end
   % End pointwise updates
   
 % Update boundaries
   u = BCs(u, M, N);
- 
+  
+  % Compute region average C1, C2:
+  [C1, C2] = getc1c2(u, u0, thres);
+  
 % Stopping criteria; min 5 iterations
-  if abs(C1-oldC1)/(C1+ep2)<tol && abs(C2-oldC2)/(C2+ep2)<tol && iter>4
+  % Compute discrete energy
+  E(iter) = discrete_E(u, g, lambda, s, alpha);
+  if iter>4 && abs( E(iter)-E(iter-1) )/abs(E(iter)) < tol
     break;
-  else
-    oldC1 = C1;
-    oldC2 = C2;
   end
 
 % Mid-cycle updates
 %   fprintf('Iter = %3d, C1 = %4.4g, C2 = %4.4g\n', iter, C1, C2);
-  if mod(iter, 99) == 0    % change to small# for more updates
+  if mod(iter, 100) == 0    % change to small# for more updates
     plotseg(u0, u, fignum, lambda, C1, C2, iter);
   end
   
@@ -187,7 +181,7 @@ function[] = plotseg(u0, u, fignum, lambda, C1, C2, Iter)
   contour( v, [0.5 0.5], 'r', 'linewidth', 2.0 );
   hold off
   
-  title({'\bf GAC', ... 
+  title({'\bf GCS', ... 
     ['$\lambda$ = ', num2str(lambda), ', C1 = ', num2str(C1, '%3.4g'), ...
     ', C2 = ', num2str(C2, '%3.4g'), ' , Iter = ', num2str(Iter)]}, ...
     'fontsize', 20)
@@ -202,4 +196,50 @@ function[] = plotseg(u0, u, fignum, lambda, C1, C2, Iter)
   
 end
 
+function[E] = discrete_E(u, g, lambda, s, alpha)
+%% Compute discrete energy
+  dmag = imgradient(u, 'central');
+  vs = vsmooth(u);
+  E = sum( g.*dmag, 'all' ) + lambda*sum( s.*u, 'all' ) + ...
+    alpha*sum( vs, 'all' );
+end
+
+function[vs] = vsmooth(u)
+% smoothed penalty function
+  vep = 1e-9;
+  vs = zeros(size(u));
   
+  cond1 = (u<=-vep/2);
+  cond2 = (u>-vep/2) & (u<0);
+  cond3 = (u>=0) & (u<=1);
+  cond4 = (u>1) & (u<1+vep/2);
+  cond5 = (u>=1+vep/2);
+  
+  vs(cond1) = -2*u(cond1)-vep/2;
+  vs(cond2) = (2/vep)*u(cond2).^2;
+  vs(cond3) = 0;
+  vs(cond4) = (2/vep)*(u(cond4)-1).^2;
+  vs(cond5) = 2*(u(cond5)-1)-vep/2;
+
+end
+
+function[vsp] = vsprime(u)
+%% Derivative of smoothed penalty function, v. 
+% See Figure 5 in [1]. See [4].
+
+  vep = 1e-9;
+  vsp = zeros(size(u));
+  
+  cond1 = (u<=-vep/2);
+  cond2 = (u>-vep/2) & (u<0);
+  cond3 = (u>=0) & (u<=1);
+  cond4 = (u>1) & (u<1+vep/2);
+  cond5 = (u>=1+vep/2);
+  
+  vsp(cond1) = -2;
+  vsp(cond2) = 4*u(cond2)/vep;
+  vsp(cond3) = 0;
+  vsp(cond4) = 4*( u(cond4)-1 )/vep;
+  vsp(cond5) = 2;
+  
+end
