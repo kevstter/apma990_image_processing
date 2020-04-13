@@ -1,7 +1,7 @@
-function[u] = gcs_sb(im, varargin)
+function[u,u0,E] = gcs_sb(varargin)
 %% gcs_sb(im, lambda, edge, noisy, iter_max, fignum)
 % Inputs:
-%   im: select synthetic image (see options below) for segmentation
+%   im: image; or string to select from default test cases. see init_im.m
 %   lambda: model parameter
 %   edge: 0 or 1; 
 %   noisy: 1 or 0
@@ -9,6 +9,8 @@ function[u] = gcs_sb(im, varargin)
 %   fignum: figure# for plotting
 % Output:
 %   u: gradient descent solution; thresholding not yet applied
+%   u0: initial (noisy) image
+%   E: energy 
 %
 % Image segmentation by the model introduced in [1] (convexification of 
 % ACWE model [2] for 2-phase seg) and advanced in [3]. The energy to be 
@@ -28,31 +30,29 @@ function[u] = gcs_sb(im, varargin)
 % [4] GoldsteinBressonOsher, Geometric application of the split B...(2010)
 %
 % Created: 30Mar2020
-% Last modified: 29Mar2020
+% Last modified: 13Apr2020
 %
 
 %% Read inputs: (im, mu, edge, noisy, iter_max, fignum)
   if nargin < 1
-    error('Missing all inputs');
+    fprintf('Default test example\n');
   end
   numvarargs = length(varargin);
   if numvarargs > 5
     error('Too many inputs...');
   end
-  % lambda, edge, noisy, iter_max, fignum, u_type
-  optargs = {1e-3, 0, 0, 50, 100};
+  % mu, edge, noisy, iter_max, fignum, u_type
+  optargs = {'grid', 1e-0, 0, 0, 500, 100};
   optargs(1:numvarargs) = varargin;
-  [mu, edge, noisy, iter_max, fignum] = optargs{:};
+  [im, mu, edge, noisy, iter_max, fignum] = optargs{:};
 
 %% Set parameters  
 % Model parameters
   lambda = 0.50;
-  thres = 0.50;
+  thresh = 0.50;
  
 % Misc
-  ep = 1e-6;
-  ep2 = ep*ep;
-  tol = 1e-2; % stopping tol  
+  tol = 9e-5; % stopping tol  
   
 %% Load initial data
   if isa(im, 'char') == 1
@@ -61,7 +61,7 @@ function[u] = gcs_sb(im, varargin)
   else
     u0 = im2double(im);
   end
-%   u0 = u0 / max(abs(u0(:))); % brings initial image satisfies -1<=u<=1
+  u0 = u0 / max(abs(u0(:))); % brings initial image satisfies -1<=u<=1
   [M, N] = size(u0);
  
 % Add noise
@@ -78,9 +78,11 @@ function[u] = gcs_sb(im, varargin)
     g = 1./(1 + imgradient(g).^2);
   end
   
-%% Initialize u, d=grad(u), 'bregman' term b
+%% Initialize u, d=grad(u), 'bregman param b
   u = u0;
-  oldu = u;
+  
+  [C1,C2] = getc1c2(u, u0, thresh);
+  E = zeros(1, iter_max);
   
   [dy, dx] = imgradientxy( u, 'intermediate' );
   bx = zeros(size(u));
@@ -93,20 +95,10 @@ function[u] = gcs_sb(im, varargin)
   
 %% %%%%%%%%%%    Begin iterations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for iter=1:iter_max
-% Compute region average C1, C2:
-  if nnz(u>thres) == 0
-    C1 = 0;
-  else
-    C1 = mean(u0(u>thres),'all');
-  end
-  if nnz(u<=thres) == 0
-    C2 = 0;
-  else
-    C2 = mean(u0(u<=thres),'all');
-  end
+  
   r = (C1 - u0).^2 - (C2 - u0).^2;
 
-  % Gauss-Seidel type pointwise updates
+  % Gauss-Seidel pointwise updates
   for i=2:M-1
     for j=2:N-1
       alpha = dx(i-1,j) - dx(i,j) - bx(i-1,j) + bx(i,j) ...
@@ -116,8 +108,10 @@ for iter=1:iter_max
       u(i,j) = max( min(beta,1), 0 );
     end
   end
+  
   u = BCs(u, M, N);
   
+  % Update d
   [uy, ux] = imgradientxy( u, 'intermediate' );
   sx = bx + ux; 
   sy = by + uy; 
@@ -128,22 +122,26 @@ for iter=1:iter_max
   dx = BCs(dx, M, N);
   dy = BCs(dy, M, N);
   
+  % Update b
   bx = bx - dx + ux;
   by = by - dy + uy;
   bx = BCs(bx, M, N);
   by = BCs(by, M, N);
   
+  % Compute region average
+  [C1, C2] = getc1c2(u, u0, thresh);
+  
 % Stopping criteria; min 5 iterations
-  if norm(u-oldu,'fro') < tol && iter>4
+  E(iter) = discrete_E(u, g, mu, r);
+  if iter>4 && abs( E(iter)-E(iter-1) )/abs(E(iter)) < tol
+    E = E(1:iter);
     break;
-  else
-    oldu = u;
   end
-
+  
 % Mid-cycle updates
 %   fprintf('Iter = %3d, C1 = %4.4g, C2 = %4.4g\n', iter, C1, C2);
-  if mod(iter, 500) == 0    % change to small# for more updates
-    plotseg(u0, u, fignum, lambda, C1, C2, iter);
+  if mod(iter, 100) == 0    % change to small# for more updates
+    plotseg(u0, u, fignum, mu, C1, C2, iter);
   end
 end 
 % %  End iterations   % %
@@ -151,11 +149,11 @@ end
 
 %% Plot final results
   fprintf('Iter = %3d, C1 = %4.4g, C2 = %4.4g\n', iter, C1, C2);
-  plotseg(u0, u, fignum, lambda, C1, C2, iter);
+  plotseg(u0, u, fignum, mu, C1, C2, iter);
 end
 % % End of main function % %
 
-function[] = plotseg(u0, u, fignum, lambda, C1, C2, Iter)
+function[] = plotseg(u0, u, fignum, mu, C1, C2, Iter)
 %% Visualize intermediate and final results 
   v = u;
   v(u>0.5) = 1;
@@ -166,7 +164,7 @@ function[] = plotseg(u0, u, fignum, lambda, C1, C2, Iter)
   hold off
   
   title({'\bf GAC with split Bregman', ... 
-    ['$\lambda$ = ', num2str(lambda), ', C1 = ', num2str(C1, '%3.4g'), ...
+    ['$\mu$ = ', num2str(mu), ', C1 = ', num2str(C1, '%3.4g'), ...
     ', C2 = ', num2str(C2, '%3.4g'), ' , Iter = ', num2str(Iter)]}, ...
     'fontsize', 20)
   
@@ -178,6 +176,13 @@ function[] = plotseg(u0, u, fignum, lambda, C1, C2, Iter)
   h.FontSize = 18;
   h.TickLabelInterpreter = 'latex';
   
+end
+
+function[E] = discrete_E(u, g, mu, r)
+%% Compute discrete energy
+% 
+  dmag = imgradient(u, 'central');
+  E = sum( g.*dmag, 'all' ) + mu*sum( r.*u, 'all');
 end
 
   
