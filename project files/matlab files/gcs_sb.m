@@ -38,7 +38,7 @@ function[u,u0,E] = gcs_sb(varargin)
     fprintf('Default test example\n');
   end
   numvarargs = length(varargin);
-  if numvarargs > 5
+  if numvarargs > 6
     error('Too many inputs...');
   end
   % mu, edge, noisy, iter_max, fignum, u_type
@@ -80,6 +80,7 @@ function[u,u0,E] = gcs_sb(varargin)
   
 %% Initialize u, d=grad(u), 'bregman param b
   u = u0;
+%   u = randn(size(u0));
   
   [C1,C2] = getc1c2(u, u0, thresh);
   E = zeros(1, iter_max);
