@@ -39,18 +39,18 @@ function[u,u0,E] = gcs(varargin)
     fprintf('Default test example\n')
   end
   numvarargs = length(varargin);
-  if numvarargs > 5
+  if numvarargs > 6
     error('Too many inputs...');
   end
   % lambda, edge, noisy, iter_max, fignum, u_type
-  optargs = {'grid', 10, 0, 1, 1000, 90};
+  optargs = {'grid', 20, 0, 1, 1000, 90};
   optargs(1:numvarargs) = varargin;
   [im, lambda, edge, noisy, iter_max, fignum] = optargs{:};
 
 %% Set parameters
 % Space & time discretization 
   h = 1.0;
-  dt = 0.01;
+  dt = 1e-3;
   
 % Model parameters
   alpha = lambda;
@@ -61,7 +61,7 @@ function[u,u0,E] = gcs(varargin)
   ep2 = ep*ep;
   
 % Misc
-  tol = 1e-4; % stopping tol  
+  tol = 1e-5; % stopping tol  
   
 %% Load initial data
   if isa(im, 'char') == 1
@@ -75,7 +75,7 @@ function[u,u0,E] = gcs(varargin)
  
 % Add noise
   if noisy == 1
-    sigma = 0.05;
+    sigma = 0.10;
     u0 = u0 + sigma*randn(size(u0));
   end
   
@@ -89,6 +89,7 @@ function[u,u0,E] = gcs(varargin)
   
 %% Initialize level set function
   u = u0;
+%   u = randn(size(u0));
   umax = max(u(:));
   umin = min(u(:));
   u = (u - umin)/(umax - umin);
@@ -104,7 +105,7 @@ function[u,u0,E] = gcs(varargin)
 %% %%%%%%%%%%    Begin iterations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for iter=1:iter_max
   
-  s = (C1 - u0).^2 - (C2 - u0).^2;
+  r = (C1 - u0).^2 - (C2 - u0).^2;
   vsp = vsprime( u );
   
   % Update pointwise (Gauss-Seidel type semi-implicit scheme)  
@@ -134,8 +135,9 @@ for iter=1:iter_max
       
     	div = co1*u(i+1,j) + co2*u(i-1,j) + co3*u(i,j+1) + co4*u(i,j-1);
       
-      u(i,j) = (1./co) * ( u(i,j) + dt*( (1/h^2)*div - lambda*s(i,j) ...
+      u(i,j) = (1./co) * ( u(i,j) + dt*( (1/h^2)*div - lambda*r(i,j) ...
         - alpha*vsp(i,j) ) );
+      
     end
   end
   % End pointwise updates
@@ -148,7 +150,7 @@ for iter=1:iter_max
   
 % Stopping criteria; min 5 iterations
   % Compute discrete energy
-  E(iter) = discrete_E(u, g, lambda, s, alpha);
+  E(iter) = discrete_E(u, g, lambda, r, alpha);
   if iter>4 && abs( E(iter)-E(iter-1) )/abs(E(iter)) < tol
     E = E(1:iter);
     break;
@@ -197,6 +199,7 @@ end
 
 function[E] = discrete_E(u, g, lambda, s, alpha)
 %% Compute discrete energy
+%
   dmag = imgradient(u, 'central');
   vs = vsmooth(u);
   E = sum( g.*dmag, 'all' ) + lambda*sum( s.*u, 'all' ) + ...
