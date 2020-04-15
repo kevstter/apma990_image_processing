@@ -149,9 +149,10 @@ One final note with regards to this numerical discretization. It is suggested to
 \section{Examples and discussion} 
 In this section, parameters are $\Delta t = 0.05$, $h = 1$, and $\varepsilon = 10^{-6}$, unless otherwise stated.
 The edge indicator function used is 
-\begin{align*}
+\begin{align}
 g = \frac{1}{1 + \abs{\nabla \widetilde f}^2 },
-\end{align*}
+\label{eq:edge_indicator}
+\end{align}
 where $\widetilde f$ is a Gaussian-smoothed version of the image $f$. Modification of the GAC model to include a constant velocity, $c$, in the normal direction, 
 \begin{align}
 \phi_t 
