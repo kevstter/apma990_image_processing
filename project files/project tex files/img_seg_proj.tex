@@ -50,9 +50,7 @@
 %       requires an Ethics Statement.
 %
 
-\usepackage{amsmath}                            % (1)
-\usepackage{amssymb}                            % (1)
-\usepackage{amsthm}                             % (2)
+\usepackage{amsmath,amssymb,amsthm}                 % (1)
 \usepackage{graphicx}\graphicspath{{figs/}}                       % (3)
 \usepackage[pdfborder={0 0 0}]{hyperref}        % (4)
 % \usepackage{pdfpages}                         % (5)
@@ -64,6 +62,8 @@
 \usepackage{cleveref}
 \usepackage{mathtools}
 
+\usepackage{booktabs}
+\usepackage{siunitx}
 
 
 
@@ -170,7 +170,7 @@
 
 \mainmatter%
 
-%\setkeys{Gin}{draft}\setkeys{Gin}{draft=true}
+\setkeys{Gin}{draft}\setkeys{Gin}{draft=false}
 
 \include{ch_intro}
 
@@ -179,6 +179,9 @@
 \include{ch_acwe}
 
 \include{ch_gcs}
+
+\chapter{Conclusion}
+has the potential for achieving extremely fast results.
 
 %   BACK MATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -198,6 +201,8 @@
 	\bibliography{../../master_ref} %% compile bibtex>pdflatex
 
 \begin{appendices} % optional
+	\chapter{The Split Bregmman method}
+	\label{appdx:sb}
 	\chapter{Code}
 \end{appendices}
 \end{document}
