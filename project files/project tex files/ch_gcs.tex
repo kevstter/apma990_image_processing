@@ -152,7 +152,7 @@ To derive the Split Bregman formulation, we start with expressing \eqref{eq:min_
 \begin{align*}
 \min_{0\leq u \leq 1} \norm{ \nabla u }_g + \lambda \ip{r}{u},
 \end{align*}
-where $\norm{ \nabla u }_1 = \norm{ g \nabla u}_1$. Next, 
+where $\norm{ \nabla u }_g = \norm{ g \nabla u}_1$. Next, 
 define an auxiliary variable $d = (d^x, d^y) = (u_x, u_y) = \nabla u$ and introduce a quadratic penalty function to weakly enforce this equality to get
 \begin{align*}
 \min_{0\leq u \leq 1, d} 
@@ -232,7 +232,7 @@ d^{k+1}
 \label{eq:sbdij}
 \end{align}
 
-The solution to \eqref{eq:splitu} can be found by first differentiating to get $0 = \lambda  +\theta  \nabla \cdot ( d^k - \nabla u - b^k) \implies \Delta u_{ij} = \frac{\lambda}{\theta} r_{ij} + \nabla \cdot (d^k_{ij} - b^k_{ij})$. As the energy \eqref{eq:splitu} is quadratic in $u_{ij}$, either the optimal value is this unconstrained minimizer, call it $\widetilde u_{ij}$, or if $\widetilde{u}_{ij} \notin [0,1]$, the optimal value we seek is $0$ or $1$, whichever is nearer. For instance with centred differencing of the Laplacian, we have 
+The solution to \eqref{eq:splitu} can be found by first differentiating to get $0 = \lambda r  +\theta  \nabla \cdot ( d^k - \nabla u - b^k) \implies \Delta u_{ij} = \frac{\lambda}{\theta} r_{ij} + \nabla \cdot (d^k_{ij} - b^k_{ij})$. As the energy \eqref{eq:splitu} is quadratic in $u_{ij}$, either the optimal value is this unconstrained minimizer, call it $\widetilde u_{ij}$, or if $\widetilde{u}_{ij} \notin [0,1]$, the optimal value we seek is $0$ or $1$, whichever is nearer. For instance with centred differencing of the Laplacian, we have 
 \begin{align}
 \widetilde u_{ij} = \frac{1}{4}\left(
 u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1} 
@@ -259,37 +259,129 @@ The full algorithm, to summarize, is
 	
 	\item Update $b^{k+1} = ((b^x)^{k+1}, (b^y)^{k+1})$ by \Cref{eq:sbbij}
 	
-	\item Repeat from step 1 if $\norm{u^{k+1} - u^k} > \textrm{tol}$.
+	\item Repeat from step 1 if stopping criteria not met.
 \end{enumerate}
 With regards to step 4, the authors in \cite{goldstein2010geometric} recommend just one sweep of Gauss-Seidel rather than iterating to full convergence, arguing that any advantage from iterating to full convergence would be lost to the error in the updates to the Bregman parameter, $b^{k+1}$.
 
 
 \section{Examples and discussion}
-In the examples to follow, the GCS model \eqref{eq:min_gcs} is solved by two numerical algorithms. The parameters used consistently throughout are summarized in \Cref{tab:model parameters};  $\lambda$ will be provided with each example. We will be looking for any differences in the quality of the segmentation, and comparing efficiency of each method by their iteration count. 
+In the examples to follow, the GCS model \eqref{eq:min_gcs} is solved by two numerical algorithms. The parameters used consistently throughout are summarized in \Cref{tab:model parameters};  $\lambda$ will be provided with each example. The same edge indicator function \eqref{eq:edge_indicator} from \Cref{ch:gac} is used and initialize $u$ with the given image. A discrete energy is calculated at each step and the stopping criteria is met when the relative change of this discrete energy drops below $9\times 10^{-6}$. We will be looking for any differences in the quality of the segmentation, and comparing efficiency of each method by their iteration count.
 
 \begin{table}[htb!]
 	\caption[]{Discretization and model parameters.}
 	\centering
 	\begin{tabular}{lll c ll} \toprule[1.25pt]
-		\multicolumn{3}{c}{Euler-Lagrange} & \phantom{abc} & \multicolumn{2}{c}{Split Bregman}
+		\multicolumn{3}{c}{Euler-Lagrange (E-L)} & \phantom{abc} & \multicolumn{2}{c}{Split Bregman (SB)}
 		\\ \midrule
-		$h = 1$ & $\Delta t = 0.1$ & $\alpha = \lambda/2$ & & $h = 1$ & $\theta = 0.5$
+		$h = 1$ & $\Delta t = 5\times 10^{-4}$ & $\alpha = \lambda$ & & $h = 1$ & $\theta = 0.5$
 		\\
-		$\varepsilon=10^{-6}$ & $\mu = 10^{-3}$
+		$\varepsilon=10^{-6}$ & $\mu = 10^{-9}$
 		\\ \bottomrule[1.25pt]
 	\end{tabular}
 	\label{tab:model parameters}
 \end{table}
 
+We start by revisiting the brain scan last seen in \Cref{ch:acwe}. \Cref{fig:brain_gcs} shows the segmentation results by both methods. We find here that the Euler-Lagrange (E-L) solution gives (at the same $\lambda$) slightly smoother results: smoother contours and larger connected regions than smaller disconnected ones when compared to the Split Bregman (SB) solution. The SB method is much more efficient, needing only 26 iterations compared to 626 for E-L method. This phenomenon is clearly illustrated in \Cref{fig:sb_energy} where the energy decrease happens almost entirely within the first 5 iterations for the SB method, but much more gradually (over 600 iterations) for E-L method.
+\begin{figure}[htb!]
+	\centering
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{brain0}
+	\end{minipage}%
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{braingcs0}
+	\end{minipage}%
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{braingcssb}
+	\end{minipage}
+	\caption{(Left) Initial image. (Middle) Euler-Lagrange solution. (Right) Split Bregman solution.}
+	\label{fig:brain_gcs}
+\end{figure}
 
+\begin{figure}[htb!]
+	\centering
+	\begin{minipage}{0.40\textwidth}
+		\includegraphics[width=\textwidth]{el_E}
+	\end{minipage}\quad
+	\begin{minipage}{0.40\textwidth}
+		\includegraphics[width=\textwidth]{sb_E}
+	\end{minipage}%
+	\caption{Discrete energy when evolving the GCS model by (left) Euler-Lagrange iterations, and (right) Split Bregman iterations.}
+	\label{fig:sb_energy}
+\end{figure}
 
+Next we investigate whether the performance of the SB method differs over other choices of $\lambda$. We do this with 2 images: the same brain scan image from \Cref{fig:brain_gcs}, and the \textsc{Matlab} favorite, ``cameraman.tif'', shown in \Cref{fig:cam}.
 
+\begin{figure}[htb!]
+	\centering
+	\begin{minipage}{0.40\textwidth}
+		\includegraphics[width=\textwidth]{camman}
+	\end{minipage}\quad
+%	\begin{minipage}{0.40\textwidth}
+%		\includegraphics[width=\textwidth]{sb_E}
+%	\end{minipage}%
+	\caption{Cameraman, a \textsc{Matlab} classic.}
+	\label{fig:cam}
+\end{figure}
 
+\begin{figure}[htb!]
+	\centering
+	
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{cammu10}
+	\end{minipage}\,
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{cammu10e}
+	\end{minipage}\quad 
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{brainmu10}
+	\end{minipage}\,
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{brainmu10e}
+	\end{minipage}
+	
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{cammu1}
+	\end{minipage}\,
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{cammu1e}
+	\end{minipage}\quad 
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{brainmu1}
+	\end{minipage}\,
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{brainmu1e}
+	\end{minipage}
+	
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{cammu01}
+	\end{minipage}\,
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{cammu01e}
+	\end{minipage}\quad
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{brainmu01}
+	\end{minipage}\,
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{brainmu01e}
+	\end{minipage}
+	
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{cammu001}
+	\end{minipage}\,
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{cammu001e}
+	\end{minipage}\quad 
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{brainmu001}
+	\end{minipage}\,
+	\begin{minipage}{0.23\textwidth}
+		\includegraphics[width=\textwidth]{brainmu001e}
+	\end{minipage}
+	\caption{(Top row) $\lambda = 10$. (Second row) $\lambda = 1$. (Third row) $\lambda = 0.1$. (Bottom row) $\lambda = 0.01$. }
+	\label{fig:diff_lam}
+\end{figure}
 
-
-
-
-
+Tests with $\lambda = 10, 1, 0.1, 0.01$ are shown in \Cref{fig:diff_lam}. We find as $\lambda$ decreases, it is slower to reach steady steady and the solution begins to favor smoother contours and reject small disconnect regions. Perhaps this shouldn't be much of a surprise since as $\lambda$ decreases, the energy $\egcs$ is increasing dominated by the first term and thus the contours evolve predominately under curvature-like flow and favours shortening of contour. With that said, the SB method still outperforms the E-L method considerably in these cases.
 
 
 
