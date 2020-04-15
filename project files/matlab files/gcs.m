@@ -50,7 +50,7 @@ function[u,u0,E] = gcs(varargin)
 %% Set parameters
 % Space & time discretization 
   h = 1.0;
-  dt = 1e-3;
+  dt = 5e-4;
   
 % Model parameters
   alpha = lambda;
@@ -61,7 +61,7 @@ function[u,u0,E] = gcs(varargin)
   ep2 = ep*ep;
   
 % Misc
-  tol = 1e-5; % stopping tol  
+  tol = 9e-7; % stopping tol  
   
 %% Load initial data
   if isa(im, 'char') == 1
@@ -98,9 +98,9 @@ function[u,u0,E] = gcs(varargin)
   E = zeros(1,iter_max);
 
 % Show image
-  figure(fignum); clf; subplot(3,3,1)
+  figure(fignum); clf; subplot(2,3,1)
   imagesc(u0); axis('image', 'off')
-  title('\bf Original (noisy) image', 'fontsize', 20);  
+  title('\bf Original image', 'fontsize', 20);  
   
 %% %%%%%%%%%%    Begin iterations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for iter=1:iter_max
@@ -158,7 +158,7 @@ for iter=1:iter_max
 
 % Mid-cycle updates
 %   fprintf('Iter = %3d, C1 = %4.4g, C2 = %4.4g\n', iter, C1, C2);
-  if mod(iter, 100) == 0    % change to small# for more updates
+  if mod(iter, 1000) == 0    % change to small# for more updates
     plotseg(u0, u, fignum, lambda, C1, C2, iter);
   end
   
@@ -177,7 +177,7 @@ function[] = plotseg(u0, u, fignum, lambda, C1, C2, Iter)
   v = u;
   v(u>0.5) = 1;
   v(u<=0.5) = 0;
-  figure(fignum); subplot(3,3,[2 3 5 6 8 9]);
+  figure(fignum); subplot(2,3,[2 3 5 6]);
   imagesc( u0 );  axis('image', 'off'); colormap(gray); hold on
   contour( v, [0.5 0.5], 'r', 'linewidth', 2.0 );
   hold off
@@ -187,9 +187,9 @@ function[] = plotseg(u0, u, fignum, lambda, C1, C2, Iter)
     ', C2 = ', num2str(C2, '%3.4g'), ' , Iter = ', num2str(Iter)]}, ...
     'fontsize', 20)
   
-  subplot(3,3,[4 7])
+  subplot(2,3,4)
   imagesc( v ); axis('image', 'off'); colormap(gray);
-  title('\bf After thresholding u' ,'fontsize', 20)
+  title('\bf $u$ after thresholding' ,'fontsize', 20)
   
   h = gca; 
   h.FontSize = 18;
