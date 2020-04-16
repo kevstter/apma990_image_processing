@@ -181,7 +181,12 @@
 \include{ch_gcs}
 
 \chapter{Conclusion}
-has the potential for achieving extremely fast results.
+From the beginning to the end, we sought to provide an overview of image segmentation, building from a mathematical modelling perspective which then gave way to numerics, discretization, implementation and practical performance. 
+
+Starting from the review of two influential image segmentation models, GAC and ACWE, we examined key modelling principles which were then unified into a convex segmentation model. We also investigated the use of two numerical methods to generate solutions with the first involving the Euler-Lagrange equations and the second the Split Bregman method. Driving the Euler-Lagrange equations to steady state proved to be a powerful technique that could be applied to the three models considered. On the other hand the Split Bregman, a convex optimization algorithm for $\ell_1$-minimization problems, outperformed the previous method by a wide margin where it was applicable, namely with the GCS model. That, however, was not the end of the story as our examples showed there is a range of parameters where the Split Bregman is blazingly fast, but there is also a range for which the Split Bregman performs sluggishly.
+
+Looking forward, we have already mentioned the need to accelerate the solution procedure when $\lambda$ is small. Would a different optimization algorithm be suitable or is there some way to incorporate the same/similar idea that was used to accelerate the evolution of the GAC model? It was also shown that a similar convexification procedure could be applied to the piecewise smooth Mumford-Shah model. In \cite{bresson2007fast}, the authors proposed solution via a dual gradient projection method, but exploring the use of the Split Bregman there may be worthwhile.
+
 
 %   BACK MATTER  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -201,8 +206,8 @@ has the potential for achieving extremely fast results.
 	\bibliography{../../master_ref} %% compile bibtex>pdflatex
 
 \begin{appendices} % optional
-	\chapter{The Split Bregmman method}
+	\chapter{The Split Bregman method}
 	\label{appdx:sb}
-	\chapter{Code}
+	%\chapter{Code}
 \end{appendices}
 \end{document}
