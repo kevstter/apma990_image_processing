@@ -8,6 +8,7 @@ The active contours without edges (ACWE) model developed by Chan and Vese \cite{
 = \textrm{ Length($\C$) } 
 + \lambda \int_{\Sigma} (c_1 - f )^2 \dx
 + \lambda \int_{\Omega \setminus \Sigma} (c_2 - f )^2 \dx,
+\label{eq:acwe_e}
 \end{align}
 where $\Sigma \subset \Omega$ is the region enclosed by the contour $\C$.
 The last two terms of $\eacwe$ are the fitting terms we were referring to and within them two key quantities, $c_1, c_2 \in \mathbf{R}$, are introduced. They are best understood with a simple piecewise constant image with 2 homogeneous regions, see Figure \ref{fig:fitting}. Suppose the gray levels of the image are 0 and 1, with 1 being maximum intensity. Then with the contour as in Figure \ref{fig:gull}, $c_1 = 1$ and $c_2 = 0$ would minimize the fitting terms as each integral will evaluate to zero. However, with any other contour, eg. \Cref{fig:tiger} or \Cref{fig:mouse}, one or both fitting terms will be positive regardless of how one chooses $c_1$ and $c_2$. Consequently, minimizing $\eacwe$ should drive the contour towards the ``best fit'' without relying on image gradients.
@@ -17,25 +18,26 @@ In the next sections we will derive an Euler-Lagrange equation to the ACWE model
 \begin{figure}
 	\centering
 	\begin{subfigure}[b]{0.31\textwidth}
-%		\includegraphics[width=\textwidth]{gull}
-		\caption{A gull}
+		\includegraphics[width=\textwidth]{acwe_0e}
+		\caption{Minimizes fitting energy}
 		\label{fig:gull}
 	\end{subfigure}
 	~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
 	%(or a blank line to force the subfigure onto a new line)
 	\begin{subfigure}[b]{0.31\textwidth}
-%		\includegraphics[width=\textwidth]{tiger}
-		\caption{A tiger}
+		\includegraphics[width=\textwidth]{acwe_1e}
+		\caption{Positive fitting energy}
 		\label{fig:tiger}
 	\end{subfigure}
 	~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
 	%(or a blank line to force the subfigure onto a new line)
 	\begin{subfigure}[b]{0.31\textwidth}
-%		\includegraphics[width=\textwidth]{mouse}
-		\caption{A mouse}
+		\includegraphics[width=\textwidth]{acwe_2e}
+		\caption{Positive fitting energy}
 		\label{fig:mouse}
 	\end{subfigure}
-	\caption{Pictures of animals}\label{fig:fitting}
+	\caption{Visual representation of the fitting energy terms in \eqref{eq:acwe_e}}
+	\label{fig:fitting}
 \end{figure}
 
 
