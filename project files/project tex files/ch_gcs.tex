@@ -281,7 +281,7 @@ In the examples to follow, the GCS model \eqref{eq:min_gcs} is solved by two num
 	\label{tab:model parameters}
 \end{table}
 
-We start by revisiting the brain scan last seen in \Cref{ch:acwe}. \Cref{fig:brain_gcs} shows the segmentation results by both methods. We find here that the Euler-Lagrange (E-L) solution gives (at the same $\lambda$) slightly smoother results: smoother contours and larger connected regions than smaller disconnected ones when compared to the Split Bregman (SB) solution. The SB method is much more efficient, needing only 26 iterations compared to 626 for E-L method. This phenomenon is clearly illustrated in \Cref{fig:sb_energy} where the energy decrease happens almost entirely within the first 5 iterations for the SB method, but much more gradually (over 600 iterations) for E-L method.
+We start by revisiting the brain scan last seen in \Cref{ch:acwe}. \Cref{fig:brain_gcs} shows the segmentation results by both methods at $\lambda = 20$. We find here that the Euler-Lagrange (E-L) solution gives slightly smoother results: smoother contours and larger connected regions than smaller disconnected ones when compared to the Split Bregman (SB) solution. The SB method is much more efficient, needing only 26 iterations compared to 626 for E-L method. This phenomenon is clearly illustrated in \Cref{fig:sb_energy} where the energy decrease happens almost entirely within the first 5 iterations for the SB method, but much more gradually (over 600 iterations) for E-L method.
 \begin{figure}[htb!]
 	\centering
 	\begin{minipage}{0.31\textwidth}
@@ -310,7 +310,6 @@ We start by revisiting the brain scan last seen in \Cref{ch:acwe}. \Cref{fig:bra
 \end{figure}
 
 Next we investigate whether the performance of the SB method differs over other choices of $\lambda$. We do this with 2 images: the same brain scan image from \Cref{fig:brain_gcs}, and the \textsc{Matlab} favorite, ``cameraman.tif'', shown in \Cref{fig:cam}.
-
 \begin{figure}[htb!]
 	\centering
 	\begin{minipage}{0.40\textwidth}
@@ -322,7 +321,6 @@ Next we investigate whether the performance of the SB method differs over other 
 	\caption{Cameraman, a \textsc{Matlab} classic.}
 	\label{fig:cam}
 \end{figure}
-
 \begin{figure}[htb!]
 	\centering
 	
@@ -380,8 +378,50 @@ Next we investigate whether the performance of the SB method differs over other 
 	\caption{(Top row) $\lambda = 10$. (Second row) $\lambda = 1$. (Third row) $\lambda = 0.1$. (Bottom row) $\lambda = 0.01$. }
 	\label{fig:diff_lam}
 \end{figure}
+Tests with $\lambda = 10, 1, 0.1, 0.01$ are shown in \Cref{fig:diff_lam}. We find as $\lambda$ decreases, the method slows considerably, and the solution gradually favors smoother contours and rejects small disconnected regions. The latter isn't a major surprise since as $\lambda$ decreases, the energy $\egcs$ is increasing dominated by the first term and thus the contours evolve predominately under curvature-like flow and favours shortening of contours. However, the increase iteration count (in some cases needing over 1000 iterations) requires a second look. 
 
-Tests with $\lambda = 10, 1, 0.1, 0.01$ are shown in \Cref{fig:diff_lam}. We find as $\lambda$ decreases, it is slower to reach steady steady and the solution begins to favor smoother contours and reject small disconnect regions. Perhaps this shouldn't be much of a surprise since as $\lambda$ decreases, the energy $\egcs$ is increasing dominated by the first term and thus the contours evolve predominately under curvature-like flow and favours shortening of contour. With that said, the SB method still outperforms the E-L method considerably in these cases.
+To confirm this observation, we run more tests with other images; see \Cref{fig:sb_sample}. In each case the number of iterations to reach steady state increases with decreasing $\lambda$. Based on these examples, we would not recommend using $\lambda < 0.1$ with the SB method. In most cases, we find $1 \leq \lambda\leq 10$ gave fast, reasonable results.
+
+
+\begin{figure}[htb!]
+	\centering
+	\begin{minipage}{0.32\textwidth}
+		\includegraphics[width=\textwidth]{brain22mu10}
+	\end{minipage},
+	\begin{minipage}{0.32\textwidth}
+		\includegraphics[width=\textwidth]{brain2mu1}
+	\end{minipage},
+	\begin{minipage}{0.32\textwidth}
+		\includegraphics[width=\textwidth]{brain2mu01}
+	\end{minipage}
+	
+	\vspace{6mm}
+	
+	\begin{minipage}{0.32\textwidth}
+		\includegraphics[width=\textwidth]{lhmu10}
+	\end{minipage},
+	\begin{minipage}{0.32\textwidth}
+		\includegraphics[width=\textwidth]{lhmu1}
+	\end{minipage},
+	\begin{minipage}{0.32\textwidth}
+		\includegraphics[width=\textwidth]{lhmu01}
+	\end{minipage}
+	\vspace{6mm}
+	
+	\begin{minipage}{0.32\textwidth}
+		\includegraphics[width=\textwidth]{cranemu10}
+	\end{minipage},
+	\begin{minipage}{0.32\textwidth}
+		\includegraphics[width=\textwidth]{cranemu1}
+	\end{minipage},
+	\begin{minipage}{0.32\textwidth}
+		\includegraphics[width=\textwidth]{cranemu01}
+	\end{minipage}
+	\vspace{6mm}
+	
+	\caption{(Left colum) $\lambda = 10$. (Middle column) $\lambda = 1$. (Third column) $\lambda = 0.1$.}
+	\label{fig:sb_sample}
+\end{figure}
 
 
 
