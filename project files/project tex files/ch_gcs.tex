@@ -144,6 +144,7 @@ with $a_1,a_2,a_3,a_4$ as given in \Cref{sec:gac_num_disc} and $a_0 = 1 + \Delta
 
 
 \subsection{The Split Bregman method applied to the GCS model}
+\label{subsect:sb}
 From the beginning we have said that minimization by way of the Euler-Lagrange equation is an extremely general technique and have now seen it applied to two non-convex and one convex segmentation model. With a convex model, it would be negligent to not consider efficient solvers from convex optimization. 
 
 In \cite{goldstein2010geometric}, Goldstein, Bresson and Osher applied the Split Bregman method \cite{goldstein2009split} to the GCS image segmentation model with good results. One advantage of using the Split Bregman method is that we are able to solve the minimization problem \eqref{eq:min_gcs} without the need of the exact penalty function  or any added regularization required due to division by $\abs{\nabla u}$. We will compare and contrast this alternative to the earlier gradient descent approach. Additional details of the Bregman and Split Bregman are provided in the Appendix \ref{appdx:sb}.  
