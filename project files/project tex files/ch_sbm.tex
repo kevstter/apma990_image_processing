@@ -1,0 +1,77 @@
+\chapter{The Split Bregman method}
+\label{appdx:sb}
+Let $E, H: \mathbf{R}^n \rightarrow \mathbf{R}$ be two convex functionals with $\min_u H(u) = 0$ and suppose $H$ is differentiable. The Bregman iteration proposes solving the unconstrained optimization problem 
+\begin{align*}
+\min_u E(u) + \lambda H(u)
+\end{align*}
+by the 2-step iterative process 
+\begin{align}
+\begin{split} 
+u^{k+1} &= \argmin_u \left\{ E(u) - \ip{p^k}{u - u^k} + \lambda H(u)  \right\}
+\\
+p^{k+1} &= p^k - \lambda\nabla H(u^{k+1}).  
+\end{split}
+\label{eq:breg_its}
+\end{align}
+Detailed discussion for the above iterative process can be found in \cite{osher2005iterative}. We note three key findings and a fourth one from \cite{goldstein2010geometric}. First is the following convergence result.
+\begin{thm}
+	Assume the solutions to the subproblems of \eqref{eq:breg_its} exists. If $u^*$ is a minimizer of $H$ and $E(u^*) < \infty$, then we have 
+	\begin{enumerate}
+		\item $H(u^{k+1}) \leq H(u^{k})$, and 
+		\item $H(u^k) \leq H(u^*)  + E(u^*) / k$.
+	\end{enumerate}
+\end{thm} 
+The next result concerns the special case (and for us, the relevant case) where $H$ is of the form $\frac{1}{2}\norm{Au - b}^2_2$, where $A$ is linear. 
+
+\begin{thm}
+	With the additional requirements on $H$, we have the following:
+	\begin{enumerate}
+		\item The iterative process \eqref{eq:breg_its} is well-defined and existence of solutions to each subproblem is guaranteed.
+		
+		\item The iterative process \eqref{eq:breg_its} is equivalent to
+		\begin{align}
+		\begin{split} 
+		u^{k+1} &= \argmin_u \left\{ 
+		E(u) + \frac{\lambda}{2} \norm{A u - b^k}^2_2
+		\right\},
+		\\
+		b^{k+1} &= b^k + b - Au^{k+1}.
+		\end{split}
+		\label{eq:breg_its2}
+		\end{align}
+		
+		\item If some iterate of \eqref{eq:breg_its2}, $u^*$, satisfies $Au^* = b$, then $u^*$ is a solution to the constrained optimization problem 
+		\begin{align}
+		\min_u E(u) \quad\text{such that}\quad Au = b.
+		\label{eq:constrained}
+		\end{align}
+	\end{enumerate}
+\end{thm}
+Combined, the theorems validate \eqref{eq:breg_its2} as an iterative solution process for \eqref{eq:constrained}.
+
+The Split Bregman is a further specialization for $L_1$-regularized problems. Suppose we seek the solution to $\min_u E(u)$ and that $E$ may written as $E(u) = \norm{\Phi(u)}_1 + H(u)$. The Split Bregman proposes decoupling the problem by first introducing an auxiliary variable, $d$, and expressing as the constrained minimization problem 
+\begin{align*}
+\min_{u,d} \norm{ d}_1 + H(u)
+\quad\text{such that}\quad d = \Phi(u). 1
+\end{align*}
+Identifying $A(u,d) = d - \Phi(u)$ and applying the Bregman iteration \eqref{eq:breg_its2} we have 
+\begin{align}
+(u^{k+1}, d^{k+1}) &= \argmin_{u,d} \left\{
+\norm{d}_1 + H(u) + \frac{\lambda}{2}\norm{d - \Phi(u) - b^k}^2_2 
+\right\}
+\label{eq:first_step}
+\\ 
+b^{k+1} 
+&= b^k - (d^{k+1} - \Phi(u^{k+1})).
+\end{align}
+The Split Bregman ``splits'' the first step \eqref{eq:first_step} in 2 substeps
+\begin{align}
+u^{k+1} &= \argmin_u H(u) + \frac{\lambda}{2} \norm{d^k - \Phi(u) - b^k}^2_2 ,
+\label{eq:spleet}
+\\
+d^{k+1} &= \argmin_d \norm{d}_1 + \frac{\lambda}{2} \norm{d - \Phi(u^{k+1}) - b^k}^2_2, 
+\label{eq:spleet2}
+\end{align}
+and iterates to convergence. The efficiency of the Split Bregman is reliant on whether one has fast solutions to the substeps \eqref{eq:spleet} and \eqref{eq:spleet2}. \Cref{subsect:sb} provides a detailed example.
+
+
