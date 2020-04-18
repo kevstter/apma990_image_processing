@@ -40,7 +40,7 @@ The next result concerns the special case (and for us, the relevant case) where 
 		\label{eq:breg_its2}
 		\end{align}
 		
-		\item If some iterate of \eqref{eq:breg_its2}, $u^*$, satisfies $Au^* = b$, then $u^*$ is a solution to the constrained optimization problem 
+		\item If some iterate, $u^*$, satisfies $Au^* = b$, then $u^*$ is a solution to the constrained optimization problem 
 		\begin{align}
 		\min_u E(u) \quad\text{such that}\quad Au = b.
 		\label{eq:constrained}
@@ -52,7 +52,7 @@ Combined, the theorems validate \eqref{eq:breg_its2} as an iterative solution pr
 The Split Bregman is a further specialization for $L_1$-regularized problems. Suppose we seek the solution to $\min_u E(u)$ and that $E$ may written as $E(u) = \norm{\Phi(u)}_1 + H(u)$. The Split Bregman proposes decoupling the problem by first introducing an auxiliary variable, $d$, and expressing as the constrained minimization problem 
 \begin{align*}
 \min_{u,d} \norm{ d}_1 + H(u)
-\quad\text{such that}\quad d = \Phi(u). 1
+\quad\text{such that}\quad d = \Phi(u).
 \end{align*}
 Identifying $A(u,d) = d - \Phi(u)$ and applying the Bregman iteration \eqref{eq:breg_its2} we have 
 \begin{align}
@@ -64,7 +64,7 @@ Identifying $A(u,d) = d - \Phi(u)$ and applying the Bregman iteration \eqref{eq:
 b^{k+1} 
 &= b^k - (d^{k+1} - \Phi(u^{k+1})).
 \end{align}
-The Split Bregman ``splits'' the first step \eqref{eq:first_step} in 2 substeps
+The Split Bregman ``splits'' the first step \eqref{eq:first_step} into 2 substeps
 \begin{align}
 u^{k+1} &= \argmin_u H(u) + \frac{\lambda}{2} \norm{d^k - \Phi(u) - b^k}^2_2 ,
 \label{eq:spleet}
