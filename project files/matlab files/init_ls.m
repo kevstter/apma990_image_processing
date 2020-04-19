@@ -16,25 +16,27 @@ function[phi, x, y] = init_ls( N, M, r, phi_type )
       phi = -sqrt( (X-(0)/2).^2 + (Y-(M+1)/2).^2 ) + r;
       
     case 'circle'
-      r = min(M,N)/4;
+      r = min(M,N)/5;
       phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + r;
   
     case 'bubbles'
-      r = min( min(M,N)/4, 7 );
+      r = min( min(M,N)/4, 5 );
       phi = -sqrt(M^2 + N^2)*ones(size(X));
-      for i = 1:floor(N/25)
-        for j = 1:floor(M/25)
-          phi = max(phi, -sqrt( (X- 25*(i-1)-12.5).^2 + (Y-25*(j-1)-12.5).^2 ) + r);
+      ngap = 2*r+3;
+      for i = 1:floor(N/ngap)
+        for j = 1:floor(M/ngap)
+          phi = max(phi, -sqrt( (X- ngap*(i-1)-r-2).^2 + (Y-ngap*(j-1)-r-2).^2 ) + r);
         end
       end  
       
     case {'grid'}
-      phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + 30;
-      phi = max(phi, -sqrt( (X-(N+1)/2).^2 + (Y-190).^2 ) + 25);
-      phi = max(phi, -sqrt( (X -(132)/2).^2 + (Y-125/2).^2 ) + 27);
+      phi = -sqrt( (X-200).^2 + (Y-170).^2 ) + 15;
+%       phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + 30;
+%       phi = -sqrt( (X-(N+1)/2).^2 + (Y-190).^2 ) + 5;
+%       phi = max(phi, -sqrt( (X -(132)/2).^2 + (Y-125/2).^2 ) + 27);
 %       phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + r;
 %       
     case 'blank'
-      phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + r;
+      phi = -sqrt( (X-(N+1)/2).^2 + (Y-(M+1)/2).^2 ) + 85;
   end
 end
