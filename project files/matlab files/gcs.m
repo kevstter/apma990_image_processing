@@ -10,6 +10,7 @@ function[u,u0,E] = gcs(varargin)
 % Output:
 %   u: gradient descent solution; thresholding not yet applied
 %   u0: initial (noisy) image
+%   E: discrete energy
 %
 % Image segmentation by the model introduced in [1] (convexification of 
 % ACWE model [2] for 2-phase seg) and advanced in [3]. Gradient descent 
@@ -21,8 +22,11 @@ function[u,u0,E] = gcs(varargin)
 % where agrad(u) = abs(grad(u)) and g is an edge indicator function.
 %
 % Eg:
-% >> ims = {'sqr2','sqr3','sqr4','bar','sidebar','blur','blur2','default'};
+% >> ims = {'sqr2','sqr4','bar','sidebar','blur','blur2','target','cam'};
 % >> for k=1:length(ims), gcs(ims{k},10,1,1,50,90); pause(0.5); end
+%
+% >> [u,~,E] = gcs_sb;
+% >> figure(1); subplot(2,1,1); hist(u); subplot(2,1,2); plot(E);
 %
 % References:
 % [1] ChanEsedogluNikolova, Algos for finding global minimizers...(2006)
@@ -31,7 +35,7 @@ function[u,u0,E] = gcs(varargin)
 % [4] PinarZenios, On smoothing exact penalty functions for...(1994)
 %
 % Created: 26Mar2020
-% Last modified: 13Apr2020
+% Last modified: 19Apr2020
 %
 
 %% Read inputs: (im, lambda, edge, noisy, iter_max, fignum)
@@ -61,7 +65,7 @@ function[u,u0,E] = gcs(varargin)
   ep2 = ep*ep;
   
 % Misc
-  tol = 9e-7; % stopping tol  
+  tol = 9e-5; % stopping tol  
   
 %% Load initial data
   if isa(im, 'char') == 1
@@ -149,7 +153,6 @@ for iter=1:iter_max
   [C1, C2] = getc1c2(u, u0, thresh);
   
 % Stopping criteria; min 5 iterations
-  % Compute discrete energy
   E(iter) = discrete_E(u, g, lambda, r, alpha);
   if iter>4 && abs( E(iter)-E(iter-1) )/abs(E(iter)) < tol
     E = E(1:iter);
@@ -157,9 +160,8 @@ for iter=1:iter_max
   end
 
 % Mid-cycle updates
-%   fprintf('Iter = %3d, C1 = %4.4g, C2 = %4.4g\n', iter, C1, C2);
   if mod(iter, 1000) == 0    % change to small# for more updates
-    plotseg(u0, u, fignum, lambda, C1, C2, iter);
+    plotseg(u0, u, fignum, lambda, C1, C2, iter, thresh);
   end
   
 end 
@@ -168,18 +170,18 @@ end
 
 %% Plot final results
   fprintf('Iter = %3d, C1 = %4.4g, C2 = %4.4g\n', iter, C1, C2);
-  plotseg(u0, u, fignum, lambda, C1, C2, iter);
+  plotseg(u0, u, fignum, lambda, C1, C2, iter, thresh);
 end
 % % End of main function % %
 
-function[] = plotseg(u0, u, fignum, lambda, C1, C2, Iter)
+function[] = plotseg(u0, u, fignum, lambda, C1, C2, Iter, thresh)
 %% Visualize intermediate and final results 
   v = u;
-  v(u>0.5) = 1;
-  v(u<=0.5) = 0;
+  v(u>thresh) = 1;
+  v(u<=thresh) = 0;
   figure(fignum); subplot(2,3,[2 3 5 6]);
   imagesc( u0 );  axis('image', 'off'); colormap(gray); hold on
-  contour( v, [0.5 0.5], 'r', 'linewidth', 2.0 );
+  contour( v, [thresh thresh], 'r', 'linewidth', 2.0 );
   hold off
   
   title({'\bf GCS', ... 

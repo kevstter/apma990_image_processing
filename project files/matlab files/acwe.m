@@ -1,7 +1,7 @@
-function[phi, u0] = acwe(im, varargin)
+function[phi, u0, E] = acwe(varargin)
 %% acwe(im, mu, noisy, iter_max, fignum, phi_type)
 % Inputs:
-%   im: select synthetic image (see options below) for segmentation
+%   im: image; or string to select from default test cases. see init_im.m
 %   lambda: regularization parameter
 %   noisy: 1 or 0
 %   iter_max: max # of iterations
@@ -9,7 +9,8 @@ function[phi, u0] = acwe(im, varargin)
 %   phi_type: level set function initialization
 % Output:
 %   phi: level set function
-%   im: initial image
+%   u0: initial image
+%   E: energy
 %
 % Matlab code modified from 
 %     http://www.math.ucla.edu/~lvese/285j.1.05s/TV_L2.m
@@ -19,32 +20,34 @@ function[phi, u0] = acwe(im, varargin)
 %     Chan and Vese, Active contours without edges (2001).
 %
 % Eg:
-% >> ims = {'sqr2','sqr3','sqr4','bar','sidebar','blur','blur2','default'};
+% >> ims = {'sqr2','sqr4','bar','sidebar','blur','blur2','target','cam'};
 % >> for k=1:length(ims), acwe(ims{k},20,0,50,80+k); pause(0.5); end
 %
-% Last modified: 29Mar2020
+% References:
+% [2] ChanVese, Active contours without edges (2001)
+%
+% Last modified: 19Apr2020
 %
 
 %% Read inputs: (im, lambda, noisy, iter_max, fignum, phi_type)  
   if nargin < 1
-    error('Missing all inputs');
+    fprintf('Default test example\n')
   end
   numvarargs = length(varargin);
   if numvarargs > 6
     error('Too many inputs...');
   end
-  % lambda, noisy, iter_max, fignum, phi_type
-  optargs = {40, 0, 50, 80, 'bubbles'};
+  % im, lambda, noisy, iter_max, fignum, phi_type
+  optargs = {'grid', 40, 0, 50, 80, 'bubbles'};
   optargs(1:numvarargs) = varargin;
-  [lambda, noisy, iter_max, fignum, phi_type] = optargs{:};
-
+  [im, lambda, noisy, iter_max, fignum, phi_type] = optargs{:};
+  
 %% Set parameters
 % Space & time discretization 
   h = 1.0;
-  dt = 9e-3;
+  dt = 3e-2;
   
 % Model parameters
-%   lambda = 1; 
   mu = 1;
   alpha = mu/h^2;
   nu = 0;
@@ -53,34 +56,36 @@ function[phi, u0] = acwe(im, varargin)
   eps = 1e-6;
   ep2 = eps*eps;
   
+% Stopping crit
+  tol = 9e-5;
+  E = zeros(1,iter_max);
+  
 %% Load initial data
   if isa( im, 'char' ) == 1
+    % Variety of simple synthetic images for testing
     [u0, r] = init_im( im );   
   else
     u0 = im2double(im);
     r = 1;
   end
+  u0 = u0/max(abs(u0(:)));
   [M, N] = size(u0);
-%   u0 = u0/max(abs(u0(:)))*255;
  
 % Add noise
   if noisy == 1
-    sigma = 15;
+    sigma = 0.10;
     u0 = u0 + sigma*randn(size(u0));
   end
-  u0 = u0/max(abs(u0(:)));
-
+  
 %% Initialize level set function
   [phi, ~, ~] = init_ls( N, M, r, phi_type );
   phi = phi/max(abs(phi(:)));
+%   oldphi = phi;
   
   [C1, C2] = getc1c2(phi, u0, 0);
   
 %% Show image and initial contour
   init_plot(fignum, u0, phi);
-  
-%% Others things to initialize
-  tol = 1e-2;                           % stopping tol
   
 %% %%%%%%%%%%    Begin iterations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for iter=1:iter_max
@@ -128,10 +133,16 @@ for iter=1:iter_max
   [C1, C2] = getc1c2(phi, u0, 0);
 
 % Stopping criteria: to do--switch to discrete energy stopping
-  fprintf('Iter = %3d, C1 = %8.9g, C2 = %3.8g\n', iter, C1, C2);
+%   if iter>4 && norm( oldphi-phi, 'fro' )/numel(phi) < tol
+  E(iter) = discrete_E(phi, u0, C1, C2, lambda, mu, h);
+  if iter>24 && abs( E(iter)-E(iter-1) )/abs(E(iter)) < tol
+    E = E(1:iter);
+    break;
+  end
+%   oldphi = phi;
 
 % Mid-cycle plot updates
-  if mod(iter, iter_max/12) == 0    % change 500 to small# for more updates
+  if mod(iter, 50) == 0    % change 500 to small# for more updates
     plotseg(u0, phi, fignum, lambda, C1, C2, iter);
   end
   
@@ -139,9 +150,22 @@ end
 % %%%%%%%%%%     End iterations    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Plot final results
+  fprintf('Iter = %3d, C1 = %4.4g, C2 = %4.4g\n', iter, C1, C2);
   plotseg(u0, phi, fignum, lambda, C1, C2, iter);
 end
 % % End of main function % %
+
+function[E] = discrete_E(u, u0, C1, C2, lambda, mu, h)
+%% Compute discrete energy
+%
+  del = h ./ ( pi*(h^2 + u.^2) );
+  gmag = imgradient(u, 'central');
+  E1 = mu*sum( del.*gmag, 'all' );
+  E2 = lambda*sum( (u0(u>0) - C1).^2, 'all' );
+  E3 = lambda*sum( (u0(u<0) - C2).^2, 'all' );
+  E = E1 + E2 + E3;
+  
+end
 
 function[] = plotseg(u0, phi, fignum, lambda, C1, C2, Iter)
 %% Visualize intermediate and final results 
