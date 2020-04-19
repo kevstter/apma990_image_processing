@@ -5,6 +5,14 @@ function[u0, r] = init_im( im )
     case 'blank'
       r = 10;
       
+    case 'target' 
+      xx = 1:256;
+      [XX, YY] = meshgrid(xx, xx);
+      D = sqrt((XX-128).^2 + (YY-128).^2);
+      u0( D < 25 ) = 256;
+      u0( D>50 & D<100 ) = 128;
+      r = 125;
+      
     case 'grid' 
       n = 15;
       n1 = 67-n;
@@ -76,8 +84,9 @@ function[u0, r] = init_im( im )
       r = 75;
     
     otherwise
-      fprintf('\nDefault u0 -- possibly undefined behaviour.\n');
+      fprintf('\nDefault u0 -- \n');
       u0 = im2double(imread('cameraman.tif'));
+%       u0 = im2double(imread('brain05.png'));
       r = 5;
       
   end
