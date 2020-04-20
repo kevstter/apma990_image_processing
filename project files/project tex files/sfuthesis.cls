@@ -293,7 +293,7 @@
       %                 in the                               \\
        %             \@department                            \\
         %             \@faculty
-        {\bfseries (Replace with image of a white circle \\  with off-white background)} %%%
+    %    {\bfseries (Replace with image of a white circle \\  with off-white background)} %%%
                                                             \vfill
 
                  {\bfseries

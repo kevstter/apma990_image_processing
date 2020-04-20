@@ -1,21 +1,23 @@
 \chapter{Introduction}
-The aim of this project is to present to the reader several core techniques relevant to image segmentation. At the top level is modelling the image segmentation problem and producing a relevant mathematical expression. Each of the models we review is designed around principles based on image characteristics, whether it is edge-based, where we have the geodesic active contour (GAC) model, or region-based with the active contours without edges (ACWE) model. The mathematical model, or ``energy'', is then minimized to give the desired effect, for instance producing a contour that wraps along the edges of an object in a photo, or assigns membership of pixels to divide an image into distinct regions. 
+The aim of this project is to present to the reader several core techniques relevant to image segmentation. At the top level is modelling the image segmentation problem and producing a meaningful mathematical expression. Each of the models we will review is designed around particular image characteristics, whether it is edge-based, where we have the geodesic active contours (GAC) model, or region-based with the active contours without edges (ACWE) model. The mathematical model, or ``energy'', is then minimized to give the desired effect. For image segmentation, that may be wrapping a contour along the edges of an object in a photo, or assigning membership to pixels to divide an image into distinct regions. 
 
-When a model is set, the task then turns to seeking and computing a minimizer. A standard technique is minimization via gradient descent of the Euler-Lagrange equation. This PDE-based technique is extremely general and can be applied with great success to each of the segmentation models we consider. However when the model is convex, powerful algorithms from convex optimization may be more efficient. Along this direction, we will present a unified globally convex segmentation (GCS) model which is an amalgam of the GAC and ACWE model, and its solution by the Split Bregman method, an extremely efficient convex optimization algorithm for $\ell_1$-minimization problems.
+After deriving a reasonable segmentation model, the task then turns to computing a minimizer. A standard minimization technique is gradient descent evolution of the Euler-Lagrange equation. This PDE-based technique is extremely general and can be applied with success to each of the segmentation models we consider. However when the model is convex, powerful algorithms from convex optimization may be more efficient. Along this direction, we will present a unified globally convex segmentation (GCS) model which is an amalgam of the GAC and ACWE model. We will compute solutions from the Euler-Lagrange equation and also by the Split Bregman method, an extremely efficient convex optimization algorithm for $\ell_1$-minimization problems.
 
 Finally, as is the case in any image processing tasks, we have to ask if the practical performance matches the theoretical predictions. To this end, numerical examples will be shown throughout, but with the majority being in \Cref{ch:gcs} where we have the unified model and two minimization algorithms matched up against each other.
 
 
-Lastly, we also point out that there is but one more section in this introduction and it is a list of standardized notation used starting in \Cref{ch:gac} and all through to the end. So print it out, laminate it, open an extra copy on all your devices, send it to all your friends and family, and then move on to the next chapter. 
+Lastly, we also point out that there is but one more section in this introduction and it is a standardized list of notation used throughout. So print it out, open an extra copy on your device (or don't), and read on to the next chapter. 
 
 \newpage
 \section{Notation}
 \begin{itemize}
 	\item $f$: the initial/given 2-D image.
 	
+	\item $g$: edge indicator function.
+	
 	\item $\Omega$: image domain.
 	
-	\item $\Sigma, \Sigma_1,$ etc.: subsets of the image domain $\Omega$.
+	\item $\Sigma, \Sigma_1, \Sigma_2$ etc.: subsets of the image domain $\Omega$.
 	
 	\item $\C$: curve/contour, typically closed with well-defined inside and outside. This may also represent a collection of (closed) contours, $\C = \cup_{k \in \mathcal{I}} \C_k$.
 	
@@ -29,7 +31,7 @@ Lastly, we also point out that there is but one more section in this introductio
 	
 	\item $\kappa$: curvature. 
 	
-	\item $\lambda, \mu, \theta, \varepsilon, \eta$: regularization parameters.
+	\item $\lambda, \theta, \varepsilon, \rho$: regularization parameters.
 	
 	\item $\mathbf{1}_\Sigma$: indicator/characteristic function of the subset $\Sigma$, i.e. $\mathbf{1}_\Sigma(x) = 1 \iff x \in \Sigma$.
 	

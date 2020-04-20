@@ -1,19 +1,25 @@
 \chapter{Active Contours Without Edges}
 \label{ch:acwe}
-The previous section we review the GAC model and outlined its shortcomings. Perhaps the key deficiency of that model is its sensitivity to initial condition and heavy reliance on user directed input to generate the desired result. It is also an edge-based model, and expects homogeneous regions to be separated by sharp transitions characterized by large gradients. This we saw led to poor performance on noisy images.
+The previous section we reviewed the GAC model and outlined its shortcomings. Perhaps the key deficiency of that model is its sensitivity to the initial conditions and its heavy reliance on user directed input to generate the desired result. 
 
 The active contours without edges (ACWE) model developed by Chan and Vese \cite{chan2001active} resolves these issues by proposing an energy based upon 2 fitting terms (for 2-phase segmentation). The energy they sought to minimize is 
 \begin{align}
+\begin{split} 
 \eacwe(\C, c_1, c_2; \lambda)
-= \textrm{ Length($\C$) } 
+&= \textrm{ Length($\C$) } 
++ \lambda \int_{\Sigma} (c_1 - f )^2 \dx
++ \lambda \int_{\Omega \setminus \Sigma} (c_2 - f )^2 \dx
+\\
+&= \textrm{ Perimeter($\Sigma$) } 
 + \lambda \int_{\Sigma} (c_1 - f )^2 \dx
 + \lambda \int_{\Omega \setminus \Sigma} (c_2 - f )^2 \dx,
+\end{split}
 \label{eq:acwe_e}
 \end{align}
 where $\Sigma \subset \Omega$ is the region enclosed by the contour $\C$.
-The last two terms of $\eacwe$ are the fitting terms we were referring to and within them two key quantities, $c_1, c_2 \in \mathbf{R}$, are introduced. They are best understood with a simple piecewise constant image with 2 homogeneous regions, see Figure \ref{fig:fitting}. Suppose the gray levels of the image are 0 and 1, with 1 being maximum intensity. Then with the contour as in Figure \ref{fig:gull}, $c_1 = 1$ and $c_2 = 0$ would minimize the fitting terms as each integral will evaluate to zero. However, with any other contour, eg. \Cref{fig:tiger} or \Cref{fig:mouse}, one or both fitting terms will be positive regardless of how one chooses $c_1$ and $c_2$. Consequently, minimizing $\eacwe$ should drive the contour towards the ``best fit'' without relying on image gradients.
+The last two terms of $\eacwe$ are the fitting terms we were referring to and within them two key quantities, $c_1, c_2 \in \mathbf{R}$, are introduced. They are best understood with a simple piecewise constant image with 2 homogeneous regions, see Figure \ref{fig:fitting}. Suppose the gray levels of the image are 0 and 1, with 1 being maximum intensity. Then with the contour as in Figure \ref{fig:gull}, $c_1 = 1$ and $c_2 = 0$ would minimize the fitting terms as each integral will evaluate to zero. However, with any other contour, eg. \Cref{fig:tiger} or \Cref{fig:mouse}, one or both fitting terms will be positive regardless of how one chooses $c_1$ and $c_2$. Consequently, minimizing $\eacwe$ drives the contour towards the ``best fit'' and does so without relying on image gradients.
 
-In the next sections we will derive an Euler-Lagrange equation to the ACWE model, provide a numerical discretization, and solve to steady state by gradient descent. Strengths and weaknesses of the model will be discussed.
+In the next sections we will derive an Euler-Lagrange equation to the ACWE model, provide a numerical discretization, and solve to steady state. Strengths and weaknesses of the model will be discussed.
 
 \begin{figure}
 	\centering
@@ -41,10 +47,10 @@ In the next sections we will derive an Euler-Lagrange equation to the ACWE model
 \end{figure}
 
 
-\section{Euler-Lagrange equation for the ACWE model}
+\section{Euler-Lagrange equation to the ACWE model}
 To be clear, minimizing $\eacwe$ is very hard as there is $\C$ (or equivalently $\Sigma$), $c_1$, and $c_2$ to consider. Rather than simultaneous minimization w.r.t. $\C$, $c_1$, and $c_2$, we will follow the clever alternating minimization scheme suggested in \cite{chan2001active}. The procedure will be to optimize first w.r.t. $c_1$ and $c_2$ with $\C$ fixed, then with $c_1$ and $c_2$ determined, minimize w.r.t. $\C$.
 
-First with fixed $\C$, it is then elementary calculus to determine the optimal values for $c_1$ and $c_2$: 
+First with fixed $\C$, it is then elementary calculus to determine the optimal values of $c_1$ and $c_2$: 
 \begin{align}
 0 = \pd{\eacwe}{c_1}  = 2\lambda \int_{\Sigma} (c_1 - f ) \dx
 &\implies 
@@ -53,13 +59,12 @@ c_1 = \frac{1}{\abs{\Sigma}} \int_{\Sigma} f \dx,
 \\
 0 = \pd{\eacwe}{c_2}  = 2\lambda \int_{\Omega\setminus \Sigma} (c_2 - f )\dx
 &\implies 
-c_2 = \frac{1}{\abs{\Omega\setminus\Sigma}} \int_{\Omega\setminus \Sigma} f \dx,
+c_2 = \frac{1}{\abs{\Omega\setminus\Sigma}} \int_{\Omega\setminus \Sigma} f \dx.
 \label{eq:c2}
 \end{align}
-where we used $\abs{\cdot}$ to denote the area of a set. Next is the minimization of $\eacwe(\cdot, c_1, c_2; \lambda)$, i.e. $\min_{\Sigma \subset \Omega} \eacwe(\Sigma)$. Rewriting in terms of a level set function to transfer the dependence on $\Sigma$ directly into the integrand, we have 
+Here we have used $\abs{\cdot}$ to denote the area of a set. Next is the minimization of $\eacwe(\cdot, c_1, c_2; \lambda)$, i.e. $\min_{\Sigma \subset \Omega} \eacwe(\Sigma)$. Rewriting in terms of a level set function, $\phi$, to transfer the dependence on $\Sigma$ directly into the integrand, we have 
 \begin{align}
-\textrm{Length}(\C) 
-= \textrm{Perimeter}(\Sigma) 
+\textrm{Perimeter}(\Sigma) 
 &= \int_{\Omega} \abs{\nabla \mathbf{1}_\Sigma(x)} \dx
 = \int_{\Omega} \abs{ \nabla H(\phi(x)) } \dx,
 \label{eacwe1}
@@ -71,66 +76,66 @@ where we used $\abs{\cdot}$ to denote the area of a set. Next is the minimizatio
 &=
 \int_{\Omega} (c_2 - f(x))^2 (1 - H(\phi(x))) \dx
 \end{align}
-Looking ahead, to derive the Euler-Lagrange equation may require differentiating the Heaviside and the delta function. This technicality is averted by subsituting with a regularized version: $H_\eta \in C^2$, and $H_\eta \rightarrow H$ as $\eta\rightarrow 0$ and denote $\delta_\eta = H'_\eta$. Thus the regularized energy (which we will continue to call $\eacwe$ for convenience) is then 
+Looking ahead, it may be necessary to differentiate the Heaviside and the delta function This technicality is averted by subsituting with a regularized version: $H_\rho \in C^2$, and $H_\rho \rightarrow H$ as $\rho\rightarrow 0$ and denote $\delta_\rho = H'_\rho$. Thus the regularized energy (which we will continue to call $\eacwe$) is
 \begin{align*}
 \eacwe(\phi) 
-&= \int_{\Omega } \abs{\nabla H_\eta(\phi(x))} \dx 
-+ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\eta(\phi(x)) 
-+ (c_2 - f(x))^2 (1 - H_\eta(\phi(x))) \dx
+&= \int_{\Omega } \abs{\nabla H_\rho(\phi(x))} \dx 
++ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\rho(\phi(x)) 
++ (c_2 - f(x))^2 (1 - H_\rho(\phi(x))) \dx
 \\
-&= \int_{\Omega } \delta_\eta(\phi(x)) \abs{\nabla \phi(x)} \dx 
-+ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\eta(\phi(x)) 
-+ (c_2 - f(x))^2 (1 - H_\eta(\phi(x))) \dx,
+&= \int_{\Omega } \delta_\rho(\phi(x)) \abs{\nabla \phi(x)} \dx 
++ \lambda\int_{\Omega} (c_1 - f(x))^2 H_\rho(\phi(x)) 
++ (c_2 - f(x))^2 (1 - H_\rho(\phi(x))) \dx,
 \end{align*}
 and its first variation
 \begin{align*}
 \dd{}{\gamma}\eacwe(\phi + \gamma h) \bigg\rvert_{\gamma = 0}
-&= \int_{\Omega} \delta'_\eta(\phi) \abs{\nabla \phi} h + \delta_\eta(\phi) \frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \nabla h \dx
-+ \lambda\int_{\Omega} \underbrace{\left[(c_1 - f)^2 - (c_2 - f)^2 \right]}_{=r(x)} \delta_\eta(\phi) h \dx 
+&= \int_{\Omega} \delta'_\rho(\phi) \abs{\nabla \phi} h + \delta_\rho(\phi) \frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \nabla h \dx
++ \lambda\int_{\Omega} \underbrace{\left[(c_1 - f)^2 - (c_2 - f)^2 \right]}_{=r(x)} \delta_\rho(\phi) h \dx 
 \\
-&= \int_{\Omega } \delta'_\eta \abs{\nabla \phi} h
-- \Div\left(\delta_\eta\frac{\nabla \phi}{\abs{\nabla \phi}}  \right)  h
+&= \int_{\Omega } \delta'_\rho \abs{\nabla \phi} h
+- \Div\left(\delta_\rho\frac{\nabla \phi}{\abs{\nabla \phi}}  \right)  h
 \dx 
-+ \int_\Gamma h\delta_\eta\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma 
-+ \lambda\int_{\Omega} r \delta_\eta h \dx
++ \int_\Gamma h\delta_\rho\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma 
++ \lambda\int_{\Omega} r \delta_\rho h \dx
 \\
-&= \int_{\Omega} \delta_\eta\left[ 
+&= \int_{\Omega} \delta_\rho\left[ 
 - \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) + \lambda r
 \right] h\dx 
-+ \int_\Gamma h\delta_\eta\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma. 
++ \int_\Gamma h\delta_\rho\frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal \,d\Gamma. 
 \end{align*}
 The gradient descent evolution is thus 
 \begin{align}
 \phi_t 
-= \delta_\eta(\phi) \left[ 
+= \delta_\rho(\phi) \left[ 
 \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) - \lambda (c_1 - f)^2 + \lambda (c_2 - f)^2 
 \right]
 \label{eq:acwe_el}
 \end{align}
-with boundary condition $\delta_\eta 
+with boundary condition $\delta_\rho 
 \frac{\nabla \phi}{\abs{\nabla \phi}} \cdot \normal = 0$.
 
 
 \section{Numerical discretization}
 \label{sec:3.2}
-As was mentioned, the numerical scheme we apply to \eqref{eq:acwe_el} will largely be the same as the scheme detailed for the GAC model in \Cref{sec:gac_num_disc}. The difference are $\delta_\eta(\phi^n_{ij})$ in place of $\abs{D^0 \phi^n}$, $g_{ij} = 1$ for all $(i,j)$, and the inclusion of the new fitting terms.
+As was mentioned, the numerical scheme we apply to \eqref{eq:acwe_el} will largely be the same as the scheme detailed for the GAC model in \Cref{sec:gac_num_disc}. The difference are $\delta_\rho(\phi^n_{ij})$ in place of $\abs{D^0 \phi^n}$, $g_{ij} = 1$ for all $(i,j)$, and the inclusion of the new fitting terms.
 
-The fitting terms are straightforward to handle as they have no explicit $\phi$-dependence. Let $r(x) = [(c_1 - f(x))^2 - (c_2 - f(x))^2 ]$. Then at the beginning of each timestep, update $c_1$ and $c_2$ according to \eqref{eq:c1} and \eqref{eq:c2} and set
+The fitting terms are straightforward to handle as they have no explicit $\phi$-dependence. Let $r(x, c_1, c_2) = [(c_1 - f(x))^2 - (c_2 - f(x))^2 ]$. At the beginning of each timestep, update $c_1$ and $c_2$ according to \eqref{eq:c1} and \eqref{eq:c2} and set
 \begin{align*}
 r_{ij}^n = \big[ (c_1^n - f_{ij})^2 - (c_2^n - f_{ij})^2 \big].
 \end{align*}
-The expression for $\delta_\eta(\phi)$ follows straight from our choice of $H_\eta(\phi)$, which we set as in \cite{chan2001active}:
+The expression for $\delta_\rho(\phi)$ follows straight from our choice of $H_\rho(\phi)$, which we set as in \cite{chan2001active}:
 \begin{align*}
-H_\eta(z)
+H_\rho(z)
  = \frac{1}{2} 
 \left(1 + \frac{2}{\pi}\arctan
-\left(\frac{z}{\eta} 
+\left(\frac{z}{\rho} 
 \right) \right)
 \implies 
-\delta_\eta(z)  
-=  \frac{1}{\pi}\frac{\eta}{\eta^2  + z^2}.
+\delta_\rho(z)  
+=  \frac{1}{\pi}\frac{\rho}{\rho^2  + z^2}.
 \end{align*}
-Very important to note that this choice of $H_\eta$ is ``global'', and it relates to the convexity of $\eacwe$. The authors argue against a compactly supported regularization of $H$, saying that because the energy is non-convex and may admit local minima, a global $H_\eta$ is more likely to compute a global minimizer and allows the model to automatically detect interior contours (both of which they observed in practice). We also set $\eta = h$ as recommended, i.e. use $\delta_h(\phi_{ij})$.
+Very important to note that this choice of $H_\rho$ is ``global'', unlike the typical choices which are local and nonzero only over a small neighbourhood. The authors argue against a compactly supported regularization of $H$, saying that because the energy is non-convex and may admit local minima, a global $H_\rho$ is more likely to compute a global minimizer and allows the model to automatically detect interior contours (both of which they observed in practice). We also set $\rho = h$ as recommended, i.e. use $\delta_h(\phi_{ij})$. The fact that $H_\rho$ is global will also play a significant role in the next chapter.
 
 All together, this gives us the numerical scheme
 \begin{align*}
@@ -145,9 +150,9 @@ All together, this gives us the numerical scheme
 with $a_1, a_2, a_3, a_4$  as given in \Cref{sec:gac_num_disc}, $g_{ij} = 1$, and $a_0 = 1 + \Delta t \delta_h(\phi_{ij}^n)(a_1 + a_2 + a_3 + a_4)$.
 
 \section{Examples and discussion}
-In this section, parameters are $\Delta t = 0.1$, $h = 1$, and $\varepsilon = 10^{-6}$, $\lambda = 10$, unless otherwise stated.
+In this section, parameters are $\Delta t = 0.05$, $h = 1$, and $\varepsilon = 10^{-6}$, $\lambda = 10$, unless otherwise stated.
 
-We start with a repeat of the eight squares example from the previous section and with Gaussian white noise added to the initial image, see \Cref{fig:grid_acwe}. We tested with five different initial contours and all reached the desired segmentation. With an ability to easily handle noisy images, and detect objects without significant user input certainly puts the ACWE model ahead of the GAC model.
+We start with a repeat of the eight squares example from the previous section, but this time with Gaussian white noise added to the initial image, see \Cref{fig:grid_acwe}. We tested five different initial contours and all reached the desired segmentation. The ability to easily handle noisy images and detect objects without significant user input certainly puts the ACWE model ahead of the GAC model.
 
 \begin{figure}[htb!]
 	\centering
@@ -173,7 +178,7 @@ We start with a repeat of the eight squares example from the previous section an
 	\caption{Only the bottom right  is a plot of the final state. The five others are different initial contours.}
 	\label{fig:grid_acwe}
 \end{figure}
-However, this method is not guaranteed to find the global minimizer. In \Cref{fig:target_acwe} is one such example where from 3 different starting contours, we ended at 3 slightly different results. The section will introduce a convex segmentation model with which one can guarantee to find a global minimum regardless of the starting contour. We also introduce a fast algorithm from convex minimization which offers both better speed and quality of segmentation.
+However, this method is not guaranteed to find the global minimizer. In \Cref{fig:target_acwe} is one such example. Beginning from 3 different contours, we ended at 3 slightly different results. This issue will be addressed in the next chapter with the introduction of a convex segmentation model with which one can be guarantee to find a global minimum regardless of the starting contour. In addition, a fast algorithm from convex minimization will also be presented and shown to offer quality segmentation results at much lower computation costs.
 \begin{figure}[htb!]
 	\centering
 	\begin{minipage}{0.31\textwidth}

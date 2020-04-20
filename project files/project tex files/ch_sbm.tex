@@ -13,7 +13,7 @@ p^{k+1} &= p^k - \lambda\nabla H(u^{k+1}).
 \end{split}
 \label{eq:breg_its}
 \end{align}
-Detailed discussion for the above iterative process can be found in \cite{osher2005iterative}. We note three key findings and a fourth one from \cite{goldstein2010geometric}. First is the following convergence result.
+Detailed discussion for the above iterative process can be found in \cite{osher2005iterative}. We note below three key findings and a fourth one from \cite{goldstein2010geometric}. First is the following convergence result.
 \begin{thm}
 	Assume the solutions to the subproblems of \eqref{eq:breg_its} exists. If $u^*$ is a minimizer of $H$ and $E(u^*) < \infty$, then we have 
 	\begin{enumerate}
@@ -49,7 +49,7 @@ The next result concerns the special case (and for us, the relevant case) where 
 \end{thm}
 Combined, the theorems validate \eqref{eq:breg_its2} as an iterative solution process for \eqref{eq:constrained}.
 
-The Split Bregman is a further specialization for $L_1$-regularized problems. Suppose we seek the solution to $\min_u E(u)$ and that $E$ may written as $E(u) = \norm{\Phi(u)}_1 + H(u)$. The Split Bregman proposes decoupling the problem by first introducing an auxiliary variable, $d$, and expressing as the constrained minimization problem 
+The Split Bregman is a further specialization of the Bregman iteration for $\ell_1$-regularized problems. Suppose we seek the solution to $\min_u E(u)$ and that $E$ may written as $E(u) = \norm{\Phi(u)}_1 + H(u)$. The Split Bregman proposes decoupling the energy by first introducing an auxiliary variable, $d$, and expressing as the constrained minimization problem 
 \begin{align*}
 \min_{u,d} \norm{ d}_1 + H(u)
 \quad\text{such that}\quad d = \Phi(u).
@@ -64,7 +64,7 @@ Identifying $A(u,d) = d - \Phi(u)$ and applying the Bregman iteration \eqref{eq:
 b^{k+1} 
 &= b^k - (d^{k+1} - \Phi(u^{k+1})).
 \end{align}
-The Split Bregman ``splits'' the first step \eqref{eq:first_step} into 2 substeps
+Finally, the Split Bregman ``splits'' the first step \eqref{eq:first_step} into 2 substeps
 \begin{align}
 u^{k+1} &= \argmin_u H(u) + \frac{\lambda}{2} \norm{d^k - \Phi(u) - b^k}^2_2 ,
 \label{eq:spleet}
@@ -72,6 +72,6 @@ u^{k+1} &= \argmin_u H(u) + \frac{\lambda}{2} \norm{d^k - \Phi(u) - b^k}^2_2 ,
 d^{k+1} &= \argmin_d \norm{d}_1 + \frac{\lambda}{2} \norm{d - \Phi(u^{k+1}) - b^k}^2_2, 
 \label{eq:spleet2}
 \end{align}
-and iterates to convergence. The efficiency of the Split Bregman is reliant on whether one has fast solutions to the substeps \eqref{eq:spleet} and \eqref{eq:spleet2}. \Cref{subsect:sb} provides a detailed example.
+and iterates to convergence. The efficiency of the Split Bregman is reliant on whether one has fast solutions to the substeps \eqref{eq:spleet} and \eqref{eq:spleet2}. \Cref{subsect:sb} provides a detailed example. 
 
 

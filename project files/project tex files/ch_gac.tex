@@ -1,6 +1,6 @@
 \chapter{Geodesic Active Contours}
 \label{ch:gac}
-The first segmentation model we review is the geodesic active contours (GAC) model from Caselles, Kimmel, and Sapiro \cite{caselles1997geodesic}. Their model of segmentation is the (near) automaticatic selection of an object or objects from an image once an initial contour $\C_0$ is prescribed. To get an active contour $\C = \C(t)$ with $\C(0) = \C_0$, they argued for the minimization of the energy 
+The first segmentation model we review is the geodesic active contours (GAC) model from Caselles, Kimmel, and Sapiro \cite{caselles1997geodesic}. Their model of segmentation gives (near) automaticatic selection of an object or objects from an image once the initial contour $\C_0$ is prescribed. To get an active contour $\C = \C(t)$ with $\C(0) = \C_0$, they argued for the minimization of the energy 
 \begin{align}
 E_\mathrm{GAC}(\C) = \int^{L(\C)}_0 g\left( \abs{\nabla f } \right) \, ds,
 \label{eq:egac}
@@ -13,7 +13,7 @@ L(\C) &: \textrm{the length of the contour $\C$,}
 \\ 
 g(\xi)&: \textrm{an edge indicator function}.
 \end{align*}
-The energy $E_\textrm{GAC}$ may be interpreted as a weighted arc length. If $g(\xi) = 1$, we would recognize $\int_\C  ds$ as standard Euclidean arc length. Hence by designing $g$ is be small near edges and large over homogeneous regions, one would expect the contour $\C$ to be drawn to and remain at object edges when minimizing $E_\textrm{GAC}$. As an example, one may set $g$ as 
+The energy $E_\textrm{GAC}$ may be interpreted as a weighted arc length. If $g(\xi) = 1$, we would recognize $\int_\C  ds$ as standard Euclidean arc length. The idea is that by designing $g$ is be small near edges and large over homogeneous regions, one would expect the contour $\C$ to be drawn to and remain at object edges when minimizing $E_\textrm{GAC}$. As examples, one may set $g$ as 
 \begin{align*}
 g_1(\xi) 
 = \frac{1}{1 + \alpha\xi^2},
@@ -23,11 +23,11 @@ g_2(\xi)
 \end{align*}
 Notice that as $\abs{\xi} \rightarrow \infty$, $g_1,g_2 \rightarrow 0$.  
 
-In the next section, we will derive the Euler-Lagrange equation and minimize $\egac$ by gradient descent. However, before we move on, let us note that we are seeking local minima when minimizing $\egac$ as this energy does have the unfortunate feature that it attains a global minimum of zero when the contour contracts to a point and vanishes. We will revisit this issue when reviewing the results of the numerical examples.
+In the next sections, we will derive the Euler-Lagrange equation and discuss its discretization for minimizing $\egac$. Numerical examples will demonstrate some of the strengths and weaknesses of this model. One notable weakness of this energy that we point to here is that by design we must be seeking a local minimum. Unfortunately, the global minimum of zero is obtained only when the contour contracts to a point and vanishes. We will revisit this issue when reviewing the numerical examples.
 
 
-\section{Euler-Lagrange equation to the GAC model}
-The derivation will be helped tremendously with some setup and a quick review of vector calculus. Let $\C: [0,1]\rightarrow \mathbf{R}^2$ be a parametrized curve, $\C = \C(p)$. We then can relate the arc length element to the parameter $p$ as $ds = \abs{C'(p)} dp$. We also want to recognize the unit tangent vector, $\tang$, unit (inward) normal, $\normal$, and curvature, $\kappa$, as 
+\section{Euler-Lagrange equation to the GAC model} 
+A bit of setup and a quick review of vector calculus will go a long ways for this derivation. Let $\C: [0,1]\rightarrow \mathbf{R}^2$ be a parametrized curve, $\C = \C(p)$. We then relate the arc length element to the parameter $p$ as $ds = \abs{C'(p)} dp$. We also recognize the unit tangent vector, $\tang$, unit (inward) normal, $\normal$, and curvature, $\kappa$, as 
 \begin{align*}
 \tang 
 = \frac{\C'}{\abs{\C'}},\quad 
@@ -36,9 +36,9 @@ The derivation will be helped tremendously with some setup and a quick review of
 \quad\text{and}\quad 
 \kappa = \frac{ \abs{\tang'} }{ \abs{ \C' } },
 \end{align*}
-with the prime notation denoting differentiation w.r.t. $p$. We will also assume $\C(0) = \C(1)$. 
+with the prime notation denoting differentiation w.r.t. $p$. We also assume $\C(0) = \C(1)$. 
 
-Next, rewriting $\egac$ as 
+Rewriting $\egac$ as 
 \begin{align*}
 \egac = \int^{L(\C)}_0 g \, ds 
 = \int^1_0 g(\C) \abs{\C'(p)} \, dp ,
@@ -63,8 +63,8 @@ we can compute its first variation:
 &=\int^1_0 \big[ \nabla g \cdot \normal - g\kappa \big] \normal  \cdot h \abs{\C'} \, dp.
 \\ 
 \end{align*}
-This gives a gradient descent evolution equation $\C_t = \left( g(\C) \kappa - \nabla g(\C) \cdot \normal \right) \normal $.
-For the level set formulation, with $\phi = \phi(x, t)$ as the level set function, we have 
+This gives the gradient descent equation $\C_t = \left( g(\C) \kappa - \nabla g(\C) \cdot \normal \right) \normal $.
+The level set formulation with level set function $\phi = \phi(x, t)$ is
 \begin{align}
 \begin{split} 
 \phi_t 
@@ -82,10 +82,10 @@ g(  \abs{\nabla I } ) \frac{\nabla \phi}{\abs{\nabla \phi}}
 
 \section{Numerical discretization}
 \label{sec:gac_num_disc}
-To discretize \eqref{eq:gac_ls}, we will use the semi-implicit Gauss-Seidel  numerical scheme proposed by Aubert and Vese \cite{aubert1997variational} and used to good effect by Chan and Vese with their ACWE model \cite{chan2001active} rather than using explicit forward Euler with second order centred differences as originally suggested\footnote{Although to be fair, it was suggested for ease of implementation as a proof of concept. For us, the same semi-implicit numerical scheme can and will be used again in \Cref{ch:acwe,ch:gcs} so it makes sense to give a complete presentation once and be able to reuse essentially the same code three times. } in \cite{caselles1997geodesic}.
+To discretize \eqref{eq:gac_ls}, we use the semi-implicit Gauss-Seidel  numerical scheme proposed by Aubert and Vese \cite{aubert1997variational} and used to good effect by Chan and Vese with their ACWE model \cite{chan2001active} rather than using explicit forward Euler with second order centred differences as originally suggested\footnote{Although to be fair, it was suggested for ease of implementation as a proof of concept. For us, the same semi-implicit numerical scheme can and will be used again in \Cref{ch:acwe,ch:gcs} so it makes sense to give a complete presentation once and be able to reuse essentially the same code three times.} in \cite{caselles1997geodesic}.
 
 Define the discrete differential operators: $D_x^+ u_{ij} = (u_{i+1,j} - u_{ij})/h$, $D^0_x = (u_{i+1,j} - u_{i-1,j})/(2h)$,
-$D^-_x u_{ij} = (u_{ij} - u_{i-1,j})/h$, and similarly for $D^+_y, D^0_y, D^-_y$.  We will also let $\abs{D^0 \phi^n} = \sqrt{(D^0_x \phi^n_{ij})^2 + (D^0_y \phi^n_{ij})^2 } $ and $\varepsilon > 0$ be a small regularization parameter. 
+$D^-_x u_{ij} = (u_{ij} - u_{i-1,j})/h$, and similarly for $D^+_y, D^0_y, D^-_y$.  We will also let $\abs{D^0 \phi^n} = \sqrt{(D^0_x \phi^n_{ij})^2 + (D^0_y \phi^n_{ij})^2 } $ and let $\varepsilon > 0$ be a small regularization parameter. 
 Then discretize \eqref{eq:gac_ls} as 
 \begin{align*}
 \frac{\phi^{n+1}_{ij} - \phi^n_{ij}}{\Delta t} 
@@ -162,41 +162,40 @@ where $\widetilde f$ is a Gaussian-smoothed version of the image $f$. Modificati
 + cg \abs{\nabla \phi},
 \label{eq:gac+c}
 \end{align}
-and is explored as well. See the examples for more detail.
+and is explored as well. More detail on this below.
 
 
-In our first series of tests is a synthetic image with 8 objects (squares). We run four scenarios with this image. The two rows of \Cref{fig:grid} represent two different initial contours. For the top row, the initial contour is a single, giant circle, and from this initial state we run two cases.  Not adding a constant normal velocity, i.e. $c = 0$, we get a bounding box on our eight squares. The contour does not drive into the gaps. Supplied with an extra push, i.e. setting $c = -1$, the segmentation algorithm picks out all eight squares.
+Our first series of tests is on a synthetic image with 8 objects (squares) with which we run four scenarios starting from two different initial contours. This is shown in \Cref{fig:grid}. In the top row is the first two scenarios with the initial contour  beinng a single, giant circle. From here we run two cases. With no added constant normal velocity, i.e. $c = 0$, we get a bounding box on our eight squares (top row middle). This is a local minimum and the contour does not drive into the gaps. Supplied with an extra push, i.e. setting $c = -1$, the segmentation algorithm picks out all eight squares (top right).
 	
-In the second row, we have multiple circles forming the initial contour, with two of the circles enclosing one square each and the centre circle feeling a little empty. Setting $c = -1$, the contours contract, causing the centre circle to vanish and the other two to wrap tightly around their square. Setting $c = 1$, the contours expand, missing two squares.
+In the second row, we have multiple circles forming the initial contour, with two of the circles enclosing one square each and the centre circle feeling a little empty. Setting $c = 0$ (and $c < 0$), the contours contract, causing the centre circle to vanish and the other two to wrap tightly around their square. Setting $c = 1$, the contours expand, missing two squares.
 	
-We find the model adheres to edges nicely. Whenever the contour locates an edge, it will stay there. However, even with limited testing it is clear that this method requires significant high level input in at least two ways. Firstly, the ``right'' initial contour is needed to generate the desired result. That may mean, for every image, a user having to drawing a rough contour around all objects before letting the algorithm take over. Second would be to specify $c$. Not only can nonzero values of $c$ produce drastically different results from $c = 0$, but it also drove the solution to steady state much quicker. The total number of iterations was reduced by a factor of over $100$ in some cases.
+We find the model adheres to edges nicely. Whenever the contour locates an edge, it stays there. However, even in our limited testing it is clear that this method requires significant high level input in at least two ways. First, the ``right'' initial contour is needed to generate the desired result. This may require, for every image, a user having to drawing a rough contour around all objects before letting the algorithm take over. Second would be to specify $c$. Not only does nonzero values of $c$ produce drastically different results from $c = 0$, but it also drove the solution to steady state faster. Without a suitable value of $c$, this method is impractical. In some of our cases, the total number of iterations was reduced by a factor of over $100$.
 	
-	\begin{figure}[htb!]
-		\centering
-		\begin{minipage}{0.31\textwidth}
-					\includegraphics[width=\textwidth]{grid1}
-		\end{minipage}%
-		\begin{minipage}{0.31\textwidth}
-			\includegraphics[width=\textwidth]{grid1ssc0}
-		\end{minipage}%
-		\begin{minipage}{0.31\textwidth}
-			\includegraphics[width=\textwidth]{grid1sscm1}
-		\end{minipage}
-		\begin{minipage}{0.31\textwidth}
-			\includegraphics[width=\textwidth]{grid2}
-		\end{minipage}%
-		\begin{minipage}{0.31\textwidth}
-			\includegraphics[width=\textwidth]{grid2ssc0}
-		\end{minipage}%
-		\begin{minipage}{0.31\textwidth}
-			\includegraphics[width=\textwidth]{grid2sscp1}
-		\end{minipage}
-		
-		\caption{(Left) Initial setup. (Middle) Steady state solution, $c = 0$. (Top right) Steady state solution, $c = -1$. (Bottom right) Steady state solution, $c = 1$.}\label{fig:grid}
-	\end{figure}
+\begin{figure}[htb!]
+	\centering
+	\begin{minipage}{0.31\textwidth}
+				\includegraphics[width=\textwidth]{grid1}
+	\end{minipage}\,
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{grid1ssc0}
+	\end{minipage}\,
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{grid1sscm1}
+	\end{minipage}
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{grid2}
+	\end{minipage}\,
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{grid2ssc0}
+	\end{minipage}\,
+	\begin{minipage}{0.31\textwidth}
+		\includegraphics[width=\textwidth]{grid2sscp1}
+	\end{minipage}
+	
+	\caption{(Left) Initial setups. (Middle) Steady state solution with $c = 0$. (Top right) Steady state solution with $c = -1$. (Bottom right) Steady state solution with $c = 1$.}
+	\label{fig:grid}
+\end{figure}
 
-
-
-In closing this chapter, we recognize that while our one example is by no means a comprehensive study on this model, we have identified a key property we fully expect the next segmentation models to improve upon, namely sensitivity to the initial condition and reliance on high level input.
+In closing this chapter, we recognize that while one example is by no means a comprehensive study on this model, we have identified a key issues we fully expect the next segmentation models to improve upon, namely sensitivity to the initial condition and reliance on high level input.
 	
 

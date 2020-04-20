@@ -1,8 +1,8 @@
 \chapter{Globally Convex Segmentation}
 \label{ch:gcs}
-Our numerical examples with the two models, GAC and ACWE, show still plenty of room for improvement from the modelling perspective. Of particular concern is this knack for finding and getting stuck at local minima (by design, in case of the GAC model), and therefore the solution we get is dependent on the initial contour we set. These issues are address by Chan, Esedo\={g}lu, and Nikolova \cite{chan2006algorithms}, and their ideas further refined by Bresson et al. \cite{bresson2007fast}, in what they referred to as the convexification of the ACWE model and the unification of GAC and ACWE models.
+Our numerical examples with the two models, GAC and ACWE, show still plenty of room for improvement from the modelling perspective. Of particular concern is this knack for finding and getting stuck at local minima (by design, in the case of the GAC model), and therefore the solution we get is dependent on the initial contour we set. These issues are addressed by Chan, Esedo\={g}lu, and Nikolova \cite{chan2006algorithms}, and their ideas further refined by Bresson et al. \cite{bresson2007fast}, in what they referred to respectively as the convexification of the ACWE model and the unification of GAC and ACWE models.
 
-In this chapter our viewpoint on the segmentation problem shifts somewhat. With the two previous models, the expression and evolution of the active contour, in the form of a level set function, was at the forefront. When we turn to the globally convex segmentation (GCS) model, the viewpoint shifts to subsets and indicator functions of these subsets. Keep in mind that for 2-phase segmentation any subset $\Sigma \subset \Omega$, and equivalently the corresponding indicator function $\ind_\Sigma$, defines a segmentation of the image domain. Thus the objective is to determine an indicator function $u(x) = \ind_\Sigma(x)$, and a piecewise constant solution $\widetilde u(x) = c_1 \ind_\Sigma(x) + c_2 (1 - \ind_\Sigma(x))$. 
+In this chapter our viewpoint on the segmentation problem shifts somewhat. With the two previous models, the expression and evolution of the active contour was at the forefront, represented by a level set function. With the globally convex segmentation (GCS) model, the viewpoint shifts to subsets and indicator functions of these subsets. Keep in mind that for 2-phase segmentation any subset $\Sigma \subset \Omega$, and equivalently the corresponding indicator function $\ind_\Sigma$, defines a segmentation of the image domain. Thus the objective is to determine an indicator function $u(x) = \ind_\Sigma(x)$, from which we can then get the piecewise constant solution $v(x) = c_1 \ind_\Sigma(x) + c_2 (1 - \ind_\Sigma(x))$. 
 
 First we address the non-convexity in the ACWE model. Restating the optimization problem in terms of indicator functions, we have 
 \begin{align}
@@ -14,19 +14,19 @@ First we address the non-convexity in the ACWE model. Restating the optimization
 \right\}.
 \label{eq:eacwe2}
 \end{align}
-Observe that the function set we are optimizing over is not convex. For instance suppose $\Sigma_1, \Sigma_2 \subset \Omega$, $\Sigma_1 \cap \Sigma_2 = \emptyset$, $\Omega \setminus (\Sigma_1 \cup \Sigma_2) \neq \emptyset$ and set $u_1 = \ind_{\Sigma_1}$ and $u_2 = \ind_{\Sigma_2}$. Then any convex combination $w = ku_1 + (1-k)u_2$, $k \in (0,1)$, would be a function that takes on three values. Addressing the issue of convexity are two key theorems presented in the next section which relaxes the restriction on our function space, allows $u$ to take on the continuum of values between 0 and 1, and leads to an equivalent but convex minimization problem.
+Observe that the function set we are optimizing over is not convex. For instance suppose $\Sigma_1, \Sigma_2 \subset \Omega$, $\Sigma_1 \cap \Sigma_2 = \emptyset$, $\Omega \setminus (\Sigma_1 \cup \Sigma_2) \neq \emptyset$ and set $u_1(x) = \ind_{\Sigma_1}(x)$ and $u_2(x) = \ind_{\Sigma_2}(x)$. Then any convex combination $w = ku_1 + (1-k)u_2$, $k \in (0,1)$, would be a function that takes on three values. Addressing the issue of convexity are two key theorems presented in the next section which relaxes the restriction on our function space, allows $u$ to take on the continuum of values between 0 and 1, and leads to an equivalent but convex minimization problem.
 
 \section{A unified GAC \& ACWE convex segmentation model}
-The key observation made by Chan et al. \cite{chan2006algorithms} is that in choosing a non-compactly support $H_\eta$ for the gradient descent evolution \eqref{eq:acwe_el}, the following gradient flow will have the same steady state solutions: 
+The key observation made by Chan et al. \cite{chan2006algorithms} is that in choosing a non-compactly supported $H_\rho$ for the gradient descent evolution \eqref{eq:acwe_el}, the following gradient flow will have the same steady state solutions: 
 \begin{align*}
 \phi_t = \Div\left(\frac{\nabla \phi}{\abs{\nabla \phi}} \right) 
 - \lambda (c_1 - f)^2 + \lambda (c_2 - f)^2 .
 \end{align*}
-This in turn is the gradient descent equation the following energy:
+This in turn is the gradient descent equation to the following energy:
 \begin{align}
 E(\phi, c_1, c_2) 
 = \int_\Omega \abs{\nabla \phi} \dx 
-+ \lambda \int_\Omega \big[ (c_1 - f)^2 - (c_2 - f)^2 \big] \phi \dx ,
++ \lambda \int_\Omega \big[ (c_1 - f)^2 - (c_2 - f)^2 \big] \phi(x) \dx ,
 \label{eq:mod_acwe}
 \end{align}
 which gets us to the first of two key theorems from \cite{chan2006algorithms}.
@@ -51,18 +51,18 @@ and guarantees that any global minimum of \eqref{eq:thm1} is only a thresholding
 \begin{thm}
 	Let $r(x) \in L^\infty(\Omega)$. Then the convex, constrained minimization problem
 	\begin{align*}
-	\min_{0 \leq u \leq 1} \int_{\Omega} \abs{\nabla u} \dx + \lambda \int_{\Omega} r(x) u \dx 
+	\min_{0 \leq u \leq 1} \int_{\Omega} \abs{\nabla u} \dx +  \int_{\Omega} \lambda r(x) u \dx 
 	\end{align*}
 	has the same set of minimizers as the following convex, unconstrained minimization problem:
 	\begin{align*}
-	\min_u \int_{\Omega} \abs{\nabla u} \dx + \lambda \int_{\Omega} r(x) u + \alpha \nu(u) \dx 
+	\min_u \int_{\Omega} \abs{\nabla u} \dx + \int_{\Omega} \lambda r(x) u + \alpha \nu(u) \dx 
 	\end{align*}
 	where $\nu(z) = \max\{ 0 , 2\abs{z - \frac{1}{2} } - 1\}$, provided that $\alpha > \frac{\lambda}{2}\norm{r(x)}_{L^\infty(\Omega)}$.
 	\label{thm:2}
 \end{thm}
 The addition of the exact penalty term \cite{hiriart1993convexI,hiriart1993convexII} grants us an unconstrained formulation. Deriving the Euler-Lagrange equation is straightforward in this form. But before doing so, we add one more modification to give a unified globally convex segmentation (GCS) model.
 
-Per Bresson et al. \cite{bresson2007fast}, building on the work of \cite{chan2006algorithms}, they propose the minimization 
+Building on the work of \cite{chan2006algorithms}, Bresson et al. \cite{bresson2007fast} propose the minimization 
 \begin{align}
 \min_{0\leq u \leq 1} \left\{
 \egcs(u, c_1, c_2; \lambda) 
@@ -80,9 +80,9 @@ Note the similarity to \eqref{eq:thm1}. The only change is the added edge indica
 \\
 &= \egac(\partial \Sigma) +  \lambda\int_{\Omega} \big[ (c_1 - f(x) )^2 - (c_2 - f(x))^2 \big] \ind_\Sigma(x) \dx,
 \end{align*}
-reduces to the familiar GAC energy but now subject to an ACWE-type fitting energy constraint. Finally, we point out that $\egcs$ satisfies statements same as those in Theorem \ref{thm:1} and \ref{thm:2}, but with $\int g\abs{\nabla u}$ in place of $\int \abs{\nabla u}$.
+reduces to the familiar GAC energy but now subject to an ACWE-type fitting energy constraint. Finally, we point out that $\egcs$ satisfies statements same as those in Theorem \ref{thm:1} and \ref{thm:2}, but with $\int g\abs{\nabla u}$ in place of $\int \abs{\nabla u}$. See \cite{bresson2007fast} for details. A third option using a dual gradient projection algorithm was proposed 
 
-The next section will not be just one, but two numerical algorithms for image segmentation under the GCS model. In addition to the usual Euler-Lagrange equation and gradient descent, we will also discuss application of the Split Bregman method \cite{goldstein2010geometric,goldstein2009split} to this segmentation model.
+The next section will not be just one, but two numerical algorithms for image segmentation under the GCS model.In addition to the usual Euler-Lagrange equation and gradient descent, we will also discuss application of the Split Bregman method \cite{goldstein2010geometric,goldstein2009split} to this segmentation model. 
 
 \section{Minimization of the GCS model: gradient descent and the Split Bregman}
 For the following sections, let 
@@ -113,18 +113,18 @@ u_t = \Div\left( g(x)  \frac{\nabla u}{\abs{\nabla u}} \right) - \lambda r(x,c_1
 \end{align}
 and boundary condition $g\frac{\nabla u}{\abs{\nabla u}} \cdot \normal = 0$. 
 
-Those familiar with exact penalty functions will note a small techical issue with the descent equation. As defined in Theorem \ref{thm:2}, $\nu(z)$ has two points of non-differentiability at $z = 0$ and $z = 1$. It will be necessary to substitute with a smooth penalty function, $\nu_\mu(z)$. In our numerical examples, we use
+Those familiar with exact penalty functions will note a small techical issue with the descent equation. As defined in Theorem \ref{thm:2}, $\nu(z)$ has two points of non-differentiability at $z = 0$ and $z = 1$. It will be necessary to substitute with a smooth penalty function, $\nu_\rho(z)$. In our numerical examples, we use
 \begin{align*}
-\nu_\mu(z) = \begin{cases}
--2z - \mu/2, & z < -\frac{\mu }{2}
+\nu_\rho(z) = \begin{cases}
+-2z - \rho/2, & z < -\frac{\rho }{2}
 \\
-\frac{2}{\mu} z^2, &-\frac{\mu}{2} \leq z < 0
+\frac{2}{\rho} z^2, &-\frac{\rho}{2} \leq z < 0
 \\
 0, & 0\leq z \leq 1
 \\
-\frac{2}{\mu}(z-1)^2, & 1 < x \leq 1 + \frac{\mu }{2}
+\frac{2}{\rho}(z-1)^2, & 1 < x \leq 1 + \frac{\rho }{2}
 \\
-2(z - 1) - \frac{\mu }{2}, & z > 1+\frac{\mu }{2}.
+2(z - 1) - \frac{\rho }{2}, & z > 1+\frac{\rho }{2}.
 \end{cases}
 \end{align*}
 This choice is similar to one analyzed by Pinar and Zenios \cite{pinar1994smoothing}.
@@ -136,18 +136,18 @@ u^{n+1}_{ij}
 \left( u^n_{ij} + \Delta t 
 \left( a_1 u^n_{i+1,j} + a_2 u^{n+1}_{i-1,j} + a_3 u^{n}_{i,j+1} + a_4 u^{n+1}_{i,j-1}
 - \lambda r_{ij}^n
-- \alpha \nu'_\mu( u^n_{ij} )
+- \alpha \nu'_\rho( u^n_{ij} )
 \right)
 \right),
 \end{align*}
-with $a_1,a_2,a_3,a_4$ as given in \Cref{sec:gac_num_disc} and $a_0 = 1 + \Delta t(a_1 + a_2 + a_3 + a_4)$. Perhaps more important to discuss is the role of the thresholding step from Theorem \ref{thm:1}. Recall that we are using the alternating minimization scheme to first set $c_1$ and $c_2$, then minimizing $\egac(\cdot, c_1, c_2)$ to determine $u$. In practice, this means we set $\Sigma = \{x \mid u(x) \geq 0.5\}$ whenever it is necessary to update $c_1$ and $c_2$, and when presenting the steady state solution and the contour $\C$.
+with $a_1,a_2,a_3,a_4$ as given in \Cref{sec:gac_num_disc} and $a_0 = 1 + \Delta t(a_1 + a_2 + a_3 + a_4)$. Perhaps more important to discuss is the role of the thresholding step from Theorem \ref{thm:1}. We are using the alternating minimization scheme to first set $c_1$ and $c_2$, then minimizing $\egac(\cdot, c_1, c_2)$ to determine $u$. In practice, this means we set $\Sigma = \{x \mid u(x) \geq 0.5\}$ whenever it is necessary to update $c_1$ and $c_2$, and when presenting the steady state solution and the contour $\C$.
 
 
 \subsection{The Split Bregman method applied to the GCS model}
 \label{subsect:sb}
-From the beginning we have said that minimization by way of the Euler-Lagrange equation is an extremely general technique and have now seen it applied to two non-convex and one convex segmentation model. With a convex model, it would be negligent to not consider efficient solvers from convex optimization. 
+From the beginning we have said that minimization by way of the Euler-Lagrange equation is an extremely general technique and have now seen it applied to two non-convex and one convex segmentation model. With the convex model, it would be negligent not to consider efficient solvers from convex optimization. 
 
-In \cite{goldstein2010geometric}, Goldstein, Bresson and Osher applied the Split Bregman method \cite{goldstein2009split} to the GCS image segmentation model with good results. One advantage of using the Split Bregman method is that we are able to solve the minimization problem \eqref{eq:min_gcs} without the need of the exact penalty function  or any added regularization required due to division by $\abs{\nabla u}$. We will compare and contrast this alternative to the earlier gradient descent approach. Additional details of the Bregman and Split Bregman are provided in the Appendix \ref{appdx:sb}.  
+In \cite{goldstein2010geometric}, Goldstein, Bresson and Osher applied the Split Bregman method \cite{goldstein2009split} to the GCS image segmentation model with good results. One advantage of using the Split Bregman method is that we are able to solve the minimization problem \eqref{eq:min_gcs} without the need of the exact penalty function  or added regularization due to division by $\abs{\nabla u}$. We will compare and contrast this alternative to the gradient descent approach. Additional details of the Bregman and Split Bregman are provided in Appendix \ref{appdx:sb}.  
 
 To derive the Split Bregman formulation, we start with expressing \eqref{eq:min_gcs} in discrete form: 
 \begin{align*}
@@ -160,10 +160,10 @@ define an auxiliary variable $d = (d^x, d^y) = (u_x, u_y) = \nabla u$ and introd
  \norm{d }_g + \lambda  \langle r, u \rangle
 + \frac{\theta}{2} \norm{ d - \nabla u }_2^2.
 \end{align*} 
-The Bregman iteration, for this particular problem, is the 2-step procedure (see \cite[Theorem 2.2.]{goldstein2009split})
+The Bregman iteration, for this particular problem, is the 2-step procedure
 \begin{align}
 (u^{k+1}, d^{k+1}) 
-&= \argmin_{0\leq u \leq 1, d}  \norm{d}_g + \lambda\ip{r}{u} + \frac{\theta}{2} \norm{d - \nabla u - b^k }^2_2 
+&= \argmin_{0\leq u \leq 1, d}  \left\{\norm{d}_g + \lambda\ip{r}{u} + \frac{\theta}{2} \norm{d - \nabla u - b^k }^2_2 \right\}
 \\
 b^{k+1} &= b^k - (d^{k+1} - \nabla u^{k+1}) .
 \label{eq:sbbij}
@@ -178,7 +178,7 @@ d^{k+1}
 &= \argmin_d \norm{d}_g + \frac{\theta}{2} \norm{d - \nabla u^{k+1} - b^k}^2_2.
 \label{eq:splitd}
 \end{align}
-Each of the substeps can be solved efficiently. We begin by tackling the solution to \eqref{eq:splitd}.
+Each of the substeps can be solved efficiently. We start by tackling the solution to \eqref{eq:splitd}.
 
 To begin, let us specify precisely the meaning of the vector norm $\norm{\cdot }_1$. The variant we give here is sometimes referred to as the isotropic TV-norm,
 \begin{align*}
@@ -188,11 +188,12 @@ To begin, let us specify precisely the meaning of the vector norm $\norm{\cdot }
 \end{align*}
 with which we can express \eqref{eq:splitd} as
 \begin{align*}
+\sum^N_{i,j=1} S_{ij}
+\coloneqq
 \sum^{N}_{i,j = 1} g_{ij} \sqrt{ (d^x_{ij} )^2 + (d^y_{ij} )^2 }
 + \frac{\theta}{2} \sum^N_{i,j=1} \big[ (d^x_{ij} - \nabla_x u^{k+1}_{ij} - (b^x_{ij})^k)^2 
 + (d^y_{ij} - \nabla_y u^{k+1}_{ij} - (b^y_{ij})^k)^2 
-\big]
-\eqqcolon \sum^N_{i,j=1} S_{ij}
+\big].
 \end{align*}
 For each $(i,j)$ we can optimize by elementary calculus, 
 \begin{align*}
@@ -203,7 +204,7 @@ For each $(i,j)$ we can optimize by elementary calculus,
 \iff
 \nabla_x u^{k+1}_{ij} + (b^x_{ij})^k  
 = d^x_{ij} \left( 1 + \frac{g_{ij}}{\theta \norm{d_{ij}}_2}
-\right)
+\right),
 \\
 0
 =\pd{S_{ij}}{d^y_{i,j}} 
@@ -212,16 +213,16 @@ For each $(i,j)$ we can optimize by elementary calculus,
 \iff
 \nabla_y u^{k+1}_{ij} + (b^y_{ij})^k 
 = d^y_{ij} \left( 1 + \frac{g_{ij}}{\theta\norm{d_{ij}}_2}
-\right)
+\right).
 \end{align*}
-which combines as 
+The two combines as 
 \begin{align*}
 \norm{\nabla u^{k+1}_{ij} + b^k_{ij}}_2^2 = \left(\norm{ d_{ij}}_2 + \frac{g_{ij}}{\theta}
 \right)^2
 \implies 
 \norm{d_{ij}}_2 = \norm{\nabla u^{k+1}_{ij} + b^k_{ij} }_2 - \frac{g_{ij}}{\theta},
 \end{align*}
-(if a solution exists), so
+if a solution exists, so
 \begin{align*}
 d_{ij}^x 
 = \frac{ \nabla_x u^{k+1}_{ij} + (b^x_{ij})^k }{ \norm{\nabla u^{k+1}_{ij} + b^k_{ij} }_2} \left( \norm{\nabla u^{k+1}_{ij} + b^k_{ij} }_2 - \frac{g_{ij}}{\theta} \right), 
@@ -233,7 +234,7 @@ d^{k+1}
 \label{eq:sbdij}
 \end{align}
 
-The solution to \eqref{eq:splitu} can be found by first differentiating to get $0 = \lambda r  +\theta  \nabla \cdot ( d^k - \nabla u - b^k) \implies \Delta u_{ij} = \frac{\lambda}{\theta} r_{ij} + \nabla \cdot (d^k_{ij} - b^k_{ij})$. As the energy \eqref{eq:splitu} is quadratic in $u_{ij}$, either the optimal value is this unconstrained minimizer, call it $\widetilde u_{ij}$, or if $\widetilde{u}_{ij} \notin [0,1]$, the optimal value we seek is $0$ or $1$, whichever is nearer. For instance with centred differencing of the Laplacian, we have 
+The solution to \eqref{eq:splitu} can be found by first differentiating to get $0 = \lambda r  +\theta  \nabla \cdot ( d^k - \nabla u - b^k) \implies \Delta u_{ij} = \frac{\lambda}{\theta} r_{ij} + \nabla \cdot (d^k_{ij} - b^k_{ij})$. As the energy \eqref{eq:splitu} is quadratic in $u_{ij}$, either the optimal value is this unconstrained minimizer, call it $\widetilde u_{ij}$, or if $\widetilde{u}_{ij} \notin [0,1]$, the optimal value we seek is $0$ or $1$, whichever is nearer. Therefore with centred differencing of the Laplacian, we have 
 \begin{align}
 \widetilde u_{ij} = \frac{1}{4}\left(
 u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j-1} 
@@ -260,13 +261,13 @@ The full algorithm, to summarize, is
 	
 	\item Update $b^{k+1} = ((b^x)^{k+1}, (b^y)^{k+1})$ by \Cref{eq:sbbij}
 	
-	\item Repeat from step 1 if stopping criteria not met.
+	\item Repeat from step 1 if the stopping criteria is not met.
 \end{enumerate}
-With regards to step 4, the authors in \cite{goldstein2010geometric} recommend just one sweep of Gauss-Seidel rather than iterating to full convergence, arguing that any advantage from iterating to full convergence would be lost to the error in the updates to the Bregman parameter, $b^{k+1}$.
+With regards to step 4, the authors in \cite{goldstein2010geometric} recommend just one sweep of Gauss-Seidel rather than iterating to full convergence, arguing that any advantage from iterating to full convergence would be lost to the error in the updates to the Bregman parameter, $b^{k+1}$. Further justification can be found in \cite{yin2013error}.
 
 
 \section{Examples and discussion}
-In the examples to follow, the GCS model \eqref{eq:min_gcs} is solved by two numerical algorithms. The parameters used consistently throughout are summarized in \Cref{tab:model parameters};  $\lambda$ will be provided with each example. The same edge indicator function \eqref{eq:edge_indicator} from \Cref{ch:gac} is used and initialize $u$ with the given image. A discrete energy is calculated at each step and the stopping criteria is met when the relative change of this discrete energy drops below $9\times 10^{-6}$. We will be looking for any differences in the quality of the segmentation, and comparing efficiency of each method by their iteration count.
+In the examples to follow, the GCS model \eqref{eq:min_gcs} is solved by two numerical algorithms. The parameters used consistently throughout are summarized in \Cref{tab:model parameters} and already we have an advantage to the Split Bregman. With two parameters to five, there are fewer that must to be tuned/set. The parameter $\lambda$ will be provided with each example. The same edge indicator function \eqref{eq:edge_indicator} from \Cref{ch:gac} is used and we initialize $u$ with the given image. A discrete energy is calculated at each step and the stopping criteria is met when the relative change in the discrete energy drops below $9\times 10^{-6}$. We will be looking for any differences in the quality of the segmentation, and comparing the efficiency of each method by their iteration count.
 
 \begin{table}[htb!]
 	\caption[]{Discretization and model parameters.}
@@ -276,13 +277,13 @@ In the examples to follow, the GCS model \eqref{eq:min_gcs} is solved by two num
 		\\ \midrule
 		$h = 1$ & $\Delta t = 5\times 10^{-4}$ & $\alpha = \lambda$ & & $h = 1$ & $\theta = 0.5$
 		\\
-		$\varepsilon=10^{-6}$ & $\mu = 10^{-9}$
+		$\varepsilon=10^{-6}$ & $\rho = 10^{-9}$
 		\\ \bottomrule[1.25pt]
 	\end{tabular}
 	\label{tab:model parameters}
 \end{table}
 
-We start by revisiting the brain scan last seen in \Cref{ch:acwe}. \Cref{fig:brain_gcs} shows the segmentation results by both methods at $\lambda = 20$. We find here that the Euler-Lagrange (E-L) solution gives slightly smoother results: smoother contours and larger connected regions than smaller disconnected ones when compared to the Split Bregman (SB) solution. The SB method is much more efficient, needing only 26 iterations compared to 626 for E-L method. This phenomenon is clearly illustrated in \Cref{fig:sb_energy} where the energy decrease happens almost entirely within the first 5 iterations for the SB method, but much more gradually (over 600 iterations) for E-L method.
+We start by revisiting the brain scan last seen in \Cref{ch:acwe}. \Cref{fig:brain_gcs} shows the segmentation results by both methods at $\lambda = 20$. We find here that the Euler-Lagrange (E-L) solution gives slightly smoother results: smoother contours and favoring larger connected regions than small disconnected ones when compared to the Split Bregman (SB) solution. The SB method is much more efficient, needing only 26 iterations compared to 626 for E-L method. This phenomenon is further illustrated in \Cref{fig:sb_energy} where we see that the energy decrease happens almost entirely within the first 5 iterations for the SB method, but much more gradually (over 600 iterations) for E-L method.
 \begin{figure}[htb!]
 	\centering
 	\begin{minipage}{0.31\textwidth}
@@ -310,7 +311,7 @@ We start by revisiting the brain scan last seen in \Cref{ch:acwe}. \Cref{fig:bra
 	\label{fig:sb_energy}
 \end{figure}
 
-Next we investigate whether the performance of the SB method differs over other choices of $\lambda$. We do this with 2 images: the same brain scan image from \Cref{fig:brain_gcs}, and the \textsc{Matlab} favorite, ``cameraman.tif'', shown in \Cref{fig:cam}.
+Next we investigate whether the performance of the SB method differs over other choices of $\lambda$. We do this with 2 images: the same brain scan image from \Cref{fig:brain_gcs}, and the \textsc{Matlab} favorite ``cameraman.tif'', shown in \Cref{fig:cam}.
 \begin{figure}[htb!]
 	\centering
 	\begin{minipage}{0.40\textwidth}
@@ -379,9 +380,9 @@ Next we investigate whether the performance of the SB method differs over other 
 	\caption{(Top row) $\lambda = 10$. (Second row) $\lambda = 1$. (Third row) $\lambda = 0.1$. (Bottom row) $\lambda = 0.01$. }
 	\label{fig:diff_lam}
 \end{figure}
-Tests with $\lambda = 10, 1, 0.1, 0.01$ are shown in \Cref{fig:diff_lam}. We find as $\lambda$ decreases, the method slows considerably, and the solution gradually favors smoother contours and rejects small disconnected regions. The latter isn't a major surprise since as $\lambda$ decreases, the energy $\egcs$ is increasing dominated by the first term and thus the contours evolve predominately under curvature-like flow and favours shortening of contours. However, the increase iteration count (in some cases needing over 1000 iterations) requires a second look. 
+Tests with $\lambda = 10, 1, 0.1, 0.01$ are shown in \Cref{fig:diff_lam}. We find that as $\lambda$ decreases, the method slows considerably, and the solution gradually favors smoother contours and rejects small disconnected regions. The latter isn't a major surprise since as $\lambda$ decreases, the energy $\egcs$ is increasing dominated by the first term and thus the contours evolve predominately under curvature-like flow and favours shortening of contours. However, the increase iteration count (in some cases needing over 1000 iterations) requires a second look. 
 
-To confirm this observation, we run more tests with other images; see \Cref{fig:sb_sample}. In each case the number of iterations to reach steady state increases with decreasing $\lambda$. Based on these examples, we would not recommend using $\lambda < 0.1$ with the SB method. In most cases, we find $1 \leq \lambda\leq 10$ gave fast, reasonable results.
+To confirm this observation, we run more tests with other images; see \Cref{fig:sb_sample}. In each case the number of iterations to reach steady state increases with decreasing $\lambda$. Based on our examples, we would not recommend using $\lambda < 0.1$ with the SB method. In most cases, we find $1 \leq \lambda\leq 10$ gave fast, reasonable results.
 
 
 \begin{figure}[htb!]
