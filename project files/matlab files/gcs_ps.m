@@ -12,18 +12,18 @@ function[u,u0,E] = gcs_ps(varargin)
 %   u0: initial (noisy) image
 %   E: discrete energy
 %
-% Image segmentation by the model introduced in [1] (convexification of 
-% ACWE model [2] for piecewise smooth 2-phase seg) and advanced in [3]. 
-% Gradient descent solution via a semi-implicit discretization similar to 
-% [2]. The energy to be minimized is 
+% Image segmentation by the model introduced in [4] (convexification of 
+% ACWE model [3,2] for piecewise smooth 2-phase seg). 
+% Gradient descent with semi-implicit discretization similar to [2]. 
+% The energy to be minimized is 
 %     integrate g*agrad(u) + integrate lambda*r(x) + alpha*v(u),
 % and its Euler-Lagrange equation
 %     u_t = div( g*grad(u)/agrad(u) ) - lambda*r(x) - alpha*v'(u)
-% where agrad(u) = abs(grad(u)) and g is an edge indicator function.
+% where agrad(u) = abs(grad(u)), and g is an edge indicator function.
 %
 % Eg:
 % >> ims = {'sqr2','sqr4','bar','sidebar','blur','blur2','target','cam'};
-% >> for k=1:length(ims), gcs_ps(ims{k},10,1,1,50,90); pause(0.5); end
+% >> for k=1:length(ims), gcs_ps(ims{k},1,0,1,60,110); pause(0.5); end
 %
 % >> [u,~,E] = gcs_ps;
 % >> figure(1); subplot(2,1,1); hist(u); subplot(2,1,2); plot(E);
@@ -31,11 +31,12 @@ function[u,u0,E] = gcs_ps(varargin)
 % References:
 % [1] ChanEsedogluNikolova, Algos for finding global minimizers...(2006)
 % [2] ChanVese, Active contours without edges (2001)
+% [3] VeseChan, A Multiphase LS framework for image segmentation...(2002)
 % [3] BressonEsedogluVanderheynstThiranOsher, Fast global minim...(2007)
 % [4] PinarZenios, On smoothing exact penalty functions for...(1994)
 %
 % Created: 21Apr2020
-% Last modified: 21Apr2020
+% Last modified: 24Apr2020
 %
 
 %% Read inputs: (im, lambda, edge, noisy, iter_max, fignum)
@@ -47,7 +48,7 @@ function[u,u0,E] = gcs_ps(varargin)
     error('Too many inputs...');
   end
   % lambda, edge, noisy, iter_max, fignum, u_type
-  optargs = {'grid', 20, 0, 0, 100, 110};
+  optargs = {'bar', 1, 0, 1, 50, 110};
   optargs(1:numvarargs) = varargin;
   [im, lambda, edge, noisy, iter_max, fignum] = optargs{:};
 
@@ -99,7 +100,6 @@ function[u,u0,E] = gcs_ps(varargin)
   umin = min(u(:));
   u = (u - umin)/(umax - umin);
   
-%   [C1,C2] = getc1c2(u,u0,thresh);
   S1 = u0; 
   S2 = u0;
   dels1 = imgradient( S1, 'central' );
@@ -155,7 +155,7 @@ for iter=1:iter_max
   u = BCs(u, M, N);
   
   % Compute region average S1, S2: % How often to update these??
-  if mod( iter, 10 ) == 0
+  if mod( iter, 10 ) == 0 
     [S1, S2] = gets1s2(u, u0, thresh, S1, S2, eta, h);
     dels1 = imgradient( S1, 'central' );
     dels2 = imgradient( S2, 'central' );
@@ -186,15 +186,15 @@ end
 % % End of main function % %
 
 function[] = plotseg(u0, u, fignum, lambda, S1, S2, Iter, thresh)
-%% Visualize intermediate and final results 
+%% Visualize intermediate and final results
+%
   v = zeros(size(u));
   v(u>thresh) = 1;
   figure(fignum); subplot(2,3,2);
   imagesc( u );  axis('image', 'off'); colormap(gray); hold on
   contour( v, [thresh thresh], 'r', 'linewidth', 2.0 );
   hold off
-  
-  title({'\bf u, no thresholding', ... 
+  title({'\bf $u$ (no thresholding) + contour', ... 
     ['$\lambda$ = ', num2str(lambda), ' , Iter = ', num2str(Iter)]}, ...
     'fontsize', 20)
   
