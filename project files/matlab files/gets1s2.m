@@ -2,7 +2,7 @@ function[S1,S2] = gets1s2(u, u0, thresh, S1, S2, eta, h)
 %% Compute piecewise smooth region approx for fitting energy
 %
 
-  its = 0;
+%   its = 0;
   
   tol = 1e-2;
   [M, N] = size(u0);
@@ -16,7 +16,7 @@ function[S1,S2] = gets1s2(u, u0, thresh, S1, S2, eta, h)
   
 % Update pointwise -- SOR scheme; s-f = eta*laplacian(s)
 while norm( oldS1 - S1, 'fro' ) > tol %|| norm( oldS2 - S2, 'fro' ) > tol
-  its = its+1;
+%   its = its+1;
   oldS1 = S1; 
 %   oldS2 = S2;
   for i = 2:M-1
@@ -45,7 +45,7 @@ while norm( oldS1 - S1, 'fro' ) > tol %|| norm( oldS2 - S2, 'fro' ) > tol
   end
 end
 
-  fprintf('%d, ', its);
+%   fprintf('%d, ', its);
   
 % Update BC: BC at the interface and BC at the edges of image domain
 % 1. Find interface
@@ -69,7 +69,7 @@ function[S1, S2] = extend_vel(u, thresh, S1, S2, oldS1, oldS2, h)
 
 % Time parameters
   dt = 0.50*h; 
-  tf = 10; 
+  tf = 6; 
   nt = ceil(tf/dt); 
   dt = tf/nt;
   ep = 1e-3;
