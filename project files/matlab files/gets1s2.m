@@ -2,22 +2,29 @@ function[S1,S2] = gets1s2(u, u0, thresh, S1, S2, eta, h)
 %% Compute piecewise smooth region approx for fitting energy
 %
 
-%   its = 0;
+  its = 0;
   
   tol = 1e-2;
   [M, N] = size(u0);
   a = h^2/eta;
   w = 1.25;
   
-  oldS1 = zeros(size(S1));
+%   oldS1 = zeros(size(S1));
 %   oldS2 = zeros(size(S2));
 
-  uzero = u<=thresh;
+  uzero = u<thresh;
+  
+%   S1(~uzero) = S2(~uzero);
+  S = S1;
+  S(~uzero) = S2(~uzero);
+  oldS = zeros(size(S));
   
 % Update pointwise -- SOR scheme; s-f = eta*laplacian(s)
-while norm( oldS1 - S1, 'fro' ) > tol %|| norm( oldS2 - S2, 'fro' ) > tol
-%   its = its+1;
-  oldS1 = S1; 
+% while norm( oldS1 - S1, 'fro' ) > tol %|| norm( oldS2 - S2, 'fro' ) > tol
+while norm( oldS - S, 'fro' ) > tol
+  its = its+1;
+  oldS = S;
+%   oldS1 = S1; 
 %   oldS2 = S2;
   for i = 2:M-1
     for j = 2:N-1
@@ -26,26 +33,31 @@ while norm( oldS1 - S1, 'fro' ) > tol %|| norm( oldS2 - S2, 'fro' ) > tol
         b = 4 - sum(c) + a;
         b = w/b; 
               
-        S1(i,j) = (1-w)*S1(i,j) + b*( S1(i+1,j)*~c(1) + S1(i-1,j)*~c(2) ...
-          + S1(i,j+1)*~c(3) + S1(i,j-1)*~c(4) + a*u0(i,j) );
+%         S1(i,j) = (1-w)*S1(i,j) + b*( S1(i+1,j)*~c(1) + S1(i-1,j)*~c(2) ...
+%           + S1(i,j+1)*~c(3) + S1(i,j-1)*~c(4) + a*u0(i,j) );
+        S(i,j) = (1-w)*S(i,j) + b*( S(i+1,j)*~c(1) + S(i-1,j)*~c(2) ...
+          + S(i,j+1)*~c(3) + S(i,j-1)*~c(4) + a*u0(i,j) );
         
-        S2(i,j) = (1-w)*S2(i,j) + b*( S2(i+1,j)*~c(1) + S2(i-1,j)*~c(2) ...
-          + S2(i,j+1)*~c(3) + S2(i,j-1)*~c(4) + a*u0(i,j) );   
       else
         b = sum(c) + a;
         b = w/b;
       
-        S1(i,j) = (1-w)*S1(i,j) + b*( S1(i+1,j)*c(1) + S1(i-1,j)*c(2) ...
-          + S1(i,j+1)*c(3) + S1(i,j-1)*c(4) + a*u0(i,j) );  
+%         S1(i,j) = (1-w)*S1(i,j) + b*( S1(i+1,j)*c(1) + S1(i-1,j)*c(2) ...
+%           + S1(i,j+1)*c(3) + S1(i,j-1)*c(4) + a*u0(i,j) );  
+        S(i,j) = (1-w)*S(i,j) + b*( S(i+1,j)*c(1) + S(i-1,j)*c(2) ...
+          + S(i,j+1)*c(3) + S(i,j-1)*c(4) + a*u0(i,j) );  
         
-        S2(i,j) = (1-w)*S2(i,j) + b*( S2(i+1,j)*c(1) + S2(i-1,j)*c(2) ...
-          + S2(i,j+1)*c(3) + S2(i,j-1)*c(4) + a*u0(i,j) );   
       end
     end
   end
-end
+end  
 
-%   fprintf('%d, ', its);
+%   S2(u>=thresh) = S1(u>=thresh);
+
+  S1(u<thresh) = S(u<thresh);
+  S2(u>=thresh) = S(u>=thresh);
+
+  fprintf('%d, ', its);
   
 % Update BC: BC at the interface and BC at the edges of image domain
 % 1. Find interface
@@ -69,7 +81,7 @@ function[S1, S2] = extend_vel(u, thresh, S1, S2, oldS1, oldS2, h)
 
 % Time parameters
   dt = 0.50*h; 
-  tf = 6; 
+  tf = 9; 
   nt = ceil(tf/dt); 
   dt = tf/nt;
   ep = 1e-3;
@@ -190,3 +202,39 @@ function[ij] = find_interface(u, thresh, N)
   ij = unique( ij );
 end
 
+
+%{
+old code...
+
+% % Update pointwise -- SOR scheme; s-f = eta*laplacian(s)
+% while norm( oldS1 - S1, 'fro' ) > tol %|| norm( oldS2 - S2, 'fro' ) > tol
+% %   its = its+1;
+%   oldS1 = S1; 
+% %   oldS2 = S2;
+%   for i = 2:M-1
+%     for j = 2:N-1
+%       c = [uzero(i+1,j) uzero(i-1,j) uzero(i,j+1) uzero(i,j-1)];
+%       if uzero(i,j) == 0 
+%         b = 4 - sum(c) + a;
+%         b = w/b; 
+%               
+%         S1(i,j) = (1-w)*S1(i,j) + b*( S1(i+1,j)*~c(1) + S1(i-1,j)*~c(2) ...
+%           + S1(i,j+1)*~c(3) + S1(i,j-1)*~c(4) + a*u0(i,j) );
+%         
+%         S2(i,j) = (1-w)*S2(i,j) + b*( S2(i+1,j)*~c(1) + S2(i-1,j)*~c(2) ...
+%           + S2(i,j+1)*~c(3) + S2(i,j-1)*~c(4) + a*u0(i,j) );   
+%       else
+%         b = sum(c) + a;
+%         b = w/b;
+%       
+%         S1(i,j) = (1-w)*S1(i,j) + b*( S1(i+1,j)*c(1) + S1(i-1,j)*c(2) ...
+%           + S1(i,j+1)*c(3) + S1(i,j-1)*c(4) + a*u0(i,j) );  
+%         
+%         S2(i,j) = (1-w)*S2(i,j) + b*( S2(i+1,j)*c(1) + S2(i-1,j)*c(2) ...
+%           + S2(i,j+1)*c(3) + S2(i,j-1)*c(4) + a*u0(i,j) );   
+%       end
+%     end
+%   end
+% end
+
+%}
