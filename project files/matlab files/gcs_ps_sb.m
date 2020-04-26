@@ -53,7 +53,7 @@ function[u,u0,E] = gcs_ps_sb(varargin)
 % Model parameters
   lambda = 0.50;
   thresh = 0.50;
-  eta = 1;
+  eta = 1e1;
   h = 1;
  
 % Misc
@@ -179,7 +179,7 @@ function[] = plotseg(u0, u, fignum, mu, S1, S2, Iter, thresh)
   
   subplot(2,3,3)
   imagesc( S2.*v + S1.*(1-v) ); axis('image', 'off'); colormap(gray);
-  title({'\bf Split Bregman -- piecewise smooth approx:', ...
+  title({'\bf Split Bregman', 'Piecewise smooth approx:', ...
     'S2*($u>$thresh)+S1*($u<=$thresh)'} , ...
     'fontsize', 20)
   
